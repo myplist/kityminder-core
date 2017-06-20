@@ -25,6 +25,42 @@ define(function(require, exports, module) {
             image.src = info.url;
         });
     }
+
+    /**
+     * xhrLoadImage: 通过 xhr 加载保存在 BOS 上的图片
+     * @note: BOS 上的 CORS 策略是取 headers 里面的 Origin 字段进行判断
+     *        而通过 image 的 src 的方式是无法传递 origin 的，因此需要通过 xhr 进行
+     */
+    function xhrLoadImage(info, callback) {
+        return Promise(function (resolve, reject) {
+            var xmlHttp = new XMLHttpRequest();
+
+            xmlHttp.open('GET', info.url + '?_=' + Date.now(), true);
+            xmlHttp.responseType = 'blob';
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                    var blob = xmlHttp.response;
+
+                    var image = document.createElement('img');
+                    
+                    image.src = DomURL.createObjectURL(blob);                    
+                    image.onload = function () {
+                        DomURL.revokeObjectURL(image.src);
+                        resolve({
+                            element: image,
+                            x: info.x,
+                            y: info.y,
+                            width: info.width,
+                            height: info.height
+                        });
+                    };
+                }
+            };
+
+            xmlHttp.send();
+        });
+    }
+
     function getSVGInfo(minder) {
         var paper = minder.getPaper(),
             paperTransform,
@@ -72,6 +108,10 @@ define(function(require, exports, module) {
         // svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
         svgXml = svgXml.replace(/&nbsp;/g, '&#xa0;');
 
+        // fix title issue in safari
+        // @ http://stackoverflow.com/questions/30273775/namespace-prefix-ns1-for-href-on-tagelement-is-not-defined-setattributens
+        svgXml = svgXml.replace(/NS\d+:title/gi, 'xlink:title');
+
         blob = new Blob([svgXml], {
             type: 'image/svg+xml'
         });
@@ -80,32 +120,39 @@ define(function(require, exports, module) {
 
         //svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXml);
 
-        var allNodes = minder.getAllNode();
         var imagesInfo = [];
 
-        for(var i = 0; i < allNodes.length; i++) {
-            var nodeData = allNodes[i].data;
+        // 遍历取出图片信息
+        traverse(minder.getRoot());
 
+        function traverse(node) {
+            var nodeData = node.data;
+            
             if (nodeData.image) {
-                /*
-                * 导出之前渲染这个节点，否则取出的 contentBox 不对
-                * by zhangbobell
-                * */
-                minder.renderNode(allNodes[i]);
+                minder.renderNode(node);
+                var nodeData = node.data;
                 var imageUrl = nodeData.image;
                 var imageSize = nodeData.imageSize;
-
-                var imageRenderBox = allNodes[i].getRenderBox('ImageRenderer', minder.getRenderContainer());
-
+                var imageRenderBox = node.getRenderBox("ImageRenderer", minder.getRenderContainer());
                 var imageInfo = {
                     url: imageUrl,
                     width: imageSize.width,
                     height: imageSize.height,
-                    x: -renderContainer.getBoundaryBox().x + imageRenderBox.x + 20,
-                    y: -renderContainer.getBoundaryBox().y + imageRenderBox.y + 20
+                    x: -renderContainer.getBoundaryBox().x + imageRenderBox.x,
+                    y: -renderContainer.getBoundaryBox().y + imageRenderBox.y
                 };
 
                 imagesInfo.push(imageInfo);
+            }
+
+            // 若节点折叠，则直接返回
+            if (nodeData.expandState === 'collapse') {
+                return;
+            }
+
+            var children = node.getChildren();
+            for (var i = 0; i < children.length; i++) {
+                traverse(children[i]);
             }
         }
 
@@ -122,8 +169,6 @@ define(function(require, exports, module) {
     function encode(json, minder, option) {
 
         var resultCallback;
-
-        var Promise = kityminder.Promise;
 
         /* 绘制 PNG 的画布及上下文 */
         var canvas = document.createElement('canvas');
@@ -158,9 +203,9 @@ define(function(require, exports, module) {
 
         function drawImage(ctx, image, x, y, width, height) {
             if (width && height) {
-                ctx.drawImage(image, x, y, width, height);
+                ctx.drawImage(image, x + padding, y + padding, width, height);
             } else {
-                ctx.drawImage(image, x, y);
+                ctx.drawImage(image, x + padding, y + padding);
             }
         }
 
@@ -171,7 +216,7 @@ define(function(require, exports, module) {
         // 加载节点上的图片
         function loadImages(imagesInfo) {
             var imagePromises = imagesInfo.map(function(imageInfo) {
-                return loadImage(imageInfo);
+                return xhrLoadImage(imageInfo);
             });
 
             return Promise.all(imagePromises);
@@ -185,19 +230,25 @@ define(function(require, exports, module) {
                 return loadImages(imagesInfo);
             }).then(function($images) {
                 for(var i = 0; i < $images.length; i++) {
-                    drawImage(ctx, $images[i].element, $images[i].x, $images[i].y, $images[i].width, $images[i].height);
+                    drawImage(ctx, $images[i].element, $images[i].x + offsetX, $images[i].y + offsetY, $images[i].width, $images[i].height);
                 }
 
                 DomURL.revokeObjectURL(svgDataUrl);
                 document.body.appendChild(canvas);
-                return generateDataUrl(canvas);
+                var pngBase64 = generateDataUrl(canvas);
+                
+                document.body.removeChild(canvas);
+                return pngBase64;
             }, function(err) {
                 // 这里处理 reject，出错基本上是因为跨域，
                 // 出错后依然导出，只不过没有图片。
                 alert('脑图的节点中包含跨域图片，导出的 png 中节点图片不显示，你可以替换掉这些跨域的图片并重试。');
                 DomURL.revokeObjectURL(svgDataUrl);
                 document.body.appendChild(canvas);
-                return generateDataUrl(canvas);
+
+                var pngBase64 = generateDataUrl(canvas);
+                document.body.removeChild(canvas);
+                return pngBase64;
             });
         }
 

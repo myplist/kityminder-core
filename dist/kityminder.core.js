@@ -1,9 +1,9 @@
 /*!
  * ====================================================
- * kityminder - v1.4.34 - 2016-09-06
+ * kityminder - v1.4.43 - 2017-05-24
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
- * Copyright (c) 2016 Baidu FEX; Licensed MIT
+ * Copyright (c) 2017 Baidu FEX; Licensed MIT
  * ====================================================
  */
 
@@ -1969,7 +1969,7 @@ _p[19] = {
                 this.fire("finishInitHook");
             }
         });
-        Minder.version = "1.4.33";
+        Minder.version = "1.4.43";
         Minder.registerInitHook = function(hook) {
             _initHooks.push(hook);
         };
@@ -2311,7 +2311,7 @@ _p[21] = {
                 return this.rc;
             },
             getCommonAncestor: function(node) {
-                return MinderNode.getNodeCommonAncestor(this, node);
+                return MinderNode.getCommonAncestor(this, node);
             },
             contains: function(node) {
                 return this == node || this.isAncestorOf(node);
@@ -6302,7 +6302,7 @@ _p[55] = {
             var BACK_PATH = "M0,13c0,3.866,3.134,7,7,7h6c3.866,0,7-3.134,7-7V7H0V13z";
             var MASK_PATH = "M20,10c0,3.866-3.134,7-7,7H7c-3.866,0-7-3.134-7-7V7c0-3.866,3.134-7,7-7h6c3.866,0,7,3.134,7,7V10z";
             var PRIORITY_DATA = "priority";
-            // 进度图标的图形
+            // 优先级图标的图形
             var PriorityIcon = kity.createClass("PriorityIcon", {
                 base: kity.Group,
                 constructor: function() {
@@ -6660,7 +6660,7 @@ _p[57] = {
                 getResourceColor: function(resource) {
                     var colorMapping = this._getResourceColorIndexMapping();
                     var nextIndex;
-                    if (!colorMapping.hasOwnProperty(resource)) {
+                    if (!Object.prototype.hasOwnProperty.call(colorMapping, resource)) {
                         // 找不到找下个可用索引
                         nextIndex = this._getNextResourceColorIndex();
                         colorMapping[resource] = nextIndex;
@@ -6677,7 +6677,7 @@ _p[57] = {
                     var mapping = this._getResourceColorIndexMapping();
                     var used = [], resource;
                     for (resource in mapping) {
-                        if (mapping.hasOwnProperty(resource)) {
+                        if (Object.prototype.hasOwnProperty.call(mapping, resource)) {
                             used.push(resource);
                         }
                     }
@@ -6696,7 +6696,7 @@ _p[57] = {
                     used = [];
                     // 抽取已经使用的值到 used 数组
                     for (resource in colorMapping) {
-                        if (colorMapping.hasOwnProperty(resource)) {
+                        if (Object.prototype.hasOwnProperty.call(colorMapping, resource)) {
                             used.push(colorMapping[resource]);
                         }
                     }
@@ -8037,9 +8037,38 @@ _p[65] = {
                 image.onerror = function(err) {
                     reject(err);
                 };
-                //image.setAttribute('crossOrigin', 'anonymous');
-                image.crossOrigin = "";
+                image.crossOrigin = "anonymous";
                 image.src = info.url;
+            });
+        }
+        /**
+     * xhrLoadImage: 通过 xhr 加载保存在 BOS 上的图片
+     * @note: BOS 上的 CORS 策略是取 headers 里面的 Origin 字段进行判断
+     *        而通过 image 的 src 的方式是无法传递 origin 的，因此需要通过 xhr 进行
+     */
+        function xhrLoadImage(info, callback) {
+            return Promise(function(resolve, reject) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", info.url + "?_=" + Date.now(), true);
+                xmlHttp.responseType = "blob";
+                xmlHttp.onreadystatechange = function() {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        var blob = xmlHttp.response;
+                        var image = document.createElement("img");
+                        image.src = DomURL.createObjectURL(blob);
+                        image.onload = function() {
+                            DomURL.revokeObjectURL(image.src);
+                            resolve({
+                                element: image,
+                                x: info.x,
+                                y: info.y,
+                                width: info.width,
+                                height: info.height
+                            });
+                        };
+                    }
+                };
+                xmlHttp.send();
             });
         }
         function getSVGInfo(minder) {
@@ -8067,32 +8096,41 @@ _p[65] = {
             svgXml = svgXml.replace(' xmlns="http://www.w3.org/2000/svg" ' + 'xmlns:NS1="" NS1:ns1:xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:NS2="" NS2:xmlns:ns1=""', "");
             // svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
             svgXml = svgXml.replace(/&nbsp;/g, "&#xa0;");
+            // fix title issue in safari
+            // @ http://stackoverflow.com/questions/30273775/namespace-prefix-ns1-for-href-on-tagelement-is-not-defined-setattributens
+            svgXml = svgXml.replace(/NS\d+:title/gi, "xlink:title");
             blob = new Blob([ svgXml ], {
                 type: "image/svg+xml"
             });
             svgUrl = DomURL.createObjectURL(blob);
             //svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXml);
-            var allNodes = minder.getAllNode();
             var imagesInfo = [];
-            for (var i = 0; i < allNodes.length; i++) {
-                var nodeData = allNodes[i].data;
+            // 遍历取出图片信息
+            traverse(minder.getRoot());
+            function traverse(node) {
+                var nodeData = node.data;
                 if (nodeData.image) {
-                    /*
-                * 导出之前渲染这个节点，否则取出的 contentBox 不对
-                * by zhangbobell
-                * */
-                    minder.renderNode(allNodes[i]);
+                    minder.renderNode(node);
+                    var nodeData = node.data;
                     var imageUrl = nodeData.image;
                     var imageSize = nodeData.imageSize;
-                    var imageRenderBox = allNodes[i].getRenderBox("ImageRenderer", minder.getRenderContainer());
+                    var imageRenderBox = node.getRenderBox("ImageRenderer", minder.getRenderContainer());
                     var imageInfo = {
                         url: imageUrl,
                         width: imageSize.width,
                         height: imageSize.height,
-                        x: -renderContainer.getBoundaryBox().x + imageRenderBox.x + 20,
-                        y: -renderContainer.getBoundaryBox().y + imageRenderBox.y + 20
+                        x: -renderContainer.getBoundaryBox().x + imageRenderBox.x,
+                        y: -renderContainer.getBoundaryBox().y + imageRenderBox.y
                     };
                     imagesInfo.push(imageInfo);
+                }
+                // 若节点折叠，则直接返回
+                if (nodeData.expandState === "collapse") {
+                    return;
+                }
+                var children = node.getChildren();
+                for (var i = 0; i < children.length; i++) {
+                    traverse(children[i]);
                 }
             }
             return {
@@ -8105,7 +8143,6 @@ _p[65] = {
         }
         function encode(json, minder, option) {
             var resultCallback;
-            var Promise = kityminder.Promise;
             /* 绘制 PNG 的画布及上下文 */
             var canvas = document.createElement("canvas");
             var ctx = canvas.getContext("2d");
@@ -8115,10 +8152,10 @@ _p[65] = {
             var bgColor = kity.Color.parse(bgDeclare);
             /* 获取 SVG 文件内容 */
             var svgInfo = getSVGInfo(minder);
-            var width = option.width && option.width > svgInfo.width ? option.width : svgInfo.width;
-            var height = option.height && option.height > svgInfo.height ? option.height : svgInfo.height;
-            var offsetX = option.width && option.width > svgInfo.width ? (option.width - svgInfo.width) / 2 : 0;
-            var offsetY = option.height && option.height > svgInfo.height ? (option.height - svgInfo.height) / 2 : 0;
+            var width = option && option.width && option.width > svgInfo.width ? option.width : svgInfo.width;
+            var height = option && option.height && option.height > svgInfo.height ? option.height : svgInfo.height;
+            var offsetX = option && option.width && option.width > svgInfo.width ? (option.width - svgInfo.width) / 2 : 0;
+            var offsetY = option && option.height && option.height > svgInfo.height ? (option.height - svgInfo.height) / 2 : 0;
             var svgDataUrl = svgInfo.dataUrl;
             var imagesInfo = svgInfo.imagesInfo;
             /* 画布的填充大小 */
@@ -8133,9 +8170,9 @@ _p[65] = {
             }
             function drawImage(ctx, image, x, y, width, height) {
                 if (width && height) {
-                    ctx.drawImage(image, x, y, width, height);
+                    ctx.drawImage(image, x + padding, y + padding, width, height);
                 } else {
-                    ctx.drawImage(image, x, y);
+                    ctx.drawImage(image, x + padding, y + padding);
                 }
             }
             function generateDataUrl(canvas) {
@@ -8144,7 +8181,7 @@ _p[65] = {
             // 加载节点上的图片
             function loadImages(imagesInfo) {
                 var imagePromises = imagesInfo.map(function(imageInfo) {
-                    return loadImage(imageInfo);
+                    return xhrLoadImage(imageInfo);
                 });
                 return Promise.all(imagePromises);
             }
@@ -8157,7 +8194,7 @@ _p[65] = {
                     return loadImages(imagesInfo);
                 }).then(function($images) {
                     for (var i = 0; i < $images.length; i++) {
-                        drawImage(ctx, $images[i].element, $images[i].x, $images[i].y, $images[i].width, $images[i].height);
+                        drawImage(ctx, $images[i].element, $images[i].x + offsetX, $images[i].y + offsetY, $images[i].width, $images[i].height);
                     }
                     DomURL.revokeObjectURL(svgDataUrl);
                     document.body.appendChild(canvas);
@@ -8428,9 +8465,9 @@ _p[66] = {
                     }
                 }
             }
-            svgDom.style.display = "none";
+            svgDom.style.visibility = "hidden";
             replaceWithNode(svgDom, x || 0, y || 0);
-            svgDom.style.display = "inline";
+            svgDom.style.visibility = "visible";
         }
         data.registerProtocol("svg", module.exports = {
             fileDescription: "SVG 矢量图",
@@ -8443,6 +8480,7 @@ _p[66] = {
                 svgXml = paper.container.innerHTML;
                 paper.shapeNode.setAttribute("transform", paperTransform);
                 svgContainer = document.createElement("div");
+                document.body.appendChild(svgContainer);
                 svgContainer.innerHTML = svgXml;
                 svgDom = svgContainer.querySelector("svg");
                 svgDom.setAttribute("width", width + padding * 2 | 0);
@@ -8450,11 +8488,12 @@ _p[66] = {
                 svgDom.setAttribute("style", "background: " + minder.getStyle("background"));
                 //"font-family: Arial, Microsoft Yahei, Heiti SC; " +
                 svgDom.setAttribute("viewBox", [ 0, 0, width + padding * 2 | 0, height + padding * 2 | 0 ].join(" "));
-                svgContainer = document.createElement("div");
+                tempSvgContainer = document.createElement("div");
                 cleanSVG(svgDom, renderBox.x - padding | 0, renderBox.y - padding | 0);
-                svgContainer.appendChild(svgDom);
+                document.body.removeChild(svgContainer);
+                tempSvgContainer.appendChild(svgDom);
                 // need a xml with width and height
-                svgXml = svgContainer.innerHTML;
+                svgXml = tempSvgContainer.innerHTML;
                 // svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
                 svgXml = svgXml.replace(/&nbsp;/g, "&#xa0;");
                 // svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
