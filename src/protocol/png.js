@@ -35,7 +35,8 @@ define(function(require, exports, module) {
         return Promise(function (resolve, reject) {
             var xmlHttp = new XMLHttpRequest();
 
-            xmlHttp.open('GET', info.url + '?_=' + Date.now(), true);
+            // xmlHttp.open('GET', info.url + '?_=' + Date.now(), true);
+            xmlHttp.open('GET', info.url, true);
             xmlHttp.responseType = 'blob';
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {

@@ -36,7 +36,7 @@ define(function(require, exports, module) {
                 if (!modulesPool[name]) continue;
 
                 // 执行模块初始化，抛出后续处理对象
-
+                // moduleDeals是模块抛出的后续处理对象
                 if (typeof(modulesPool[name]) == 'function') {
                     moduleDeals = modulesPool[name].call(me);
                 } else {
@@ -45,7 +45,7 @@ define(function(require, exports, module) {
                 this._modules[name] = moduleDeals;
 
                 if (!moduleDeals) continue;
-
+                // 设置该模块的全局默认配制
                 if (moduleDeals.defaultOptions) {
                     me.setDefaultOptions(moduleDeals.defaultOptions);
                 }

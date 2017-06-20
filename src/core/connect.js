@@ -31,7 +31,6 @@ define(function(require, exports, module) {
         getConnect: function() {
             return this.data.connect || 'default';
         },
-
         getConnectProvider: function() {
             return _connectProviders[this.getConnect()] || _connectProviders['default'];
         },
