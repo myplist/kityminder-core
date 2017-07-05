@@ -32,21 +32,15 @@
         "root": {
             "data": {
                 "text": "我的女神，哈哈",
-                "image": "http://p.ishowx.com/uploads/allimg/170209/648-1F20Z91243-50.jpg",
-                "imageSize": { "width": 270, "height": 129 }
+                "resource": ["hello", "hello", "hello"]
             },
-            "children": [
-                { "data": { "text": "新闻" } },
-                { "data": { "text": "网页", "priority": 1 } },
-                { "data": { "text": "贴吧", "priority": 2 } },
-                { "data": { "text": "知道", "priority": 2 } },
-                { "data": { "text": "音乐", "priority": 3 } },
-                { "data": { "text": "图片", "priority": 3 } },
-                { "data": { "text": "视频", "priority": 3 } },
-                { "data": { "text": "地图", "priority": 3 } },
-                { "data": { "text": "百科", "priority": 3 } },
-                { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
-            ]
+            "children": [{
+                "data": {"text": "hello"}, 
+                "children": []
+            }, {
+                "data": {"text": "hello","resource": ["world"]}, 
+                "children": []
+            }]
         }
     }
     </script>

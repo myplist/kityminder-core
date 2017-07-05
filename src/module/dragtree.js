@@ -86,6 +86,7 @@ define(function(require, exports, module) {
             // 只记录开始位置，不马上开启拖放模式
             // 这个位置同时是拖放范围收缩时的焦点位置（中心）
             this._startPosition = position;
+            this._minder.fire('dragstart');
         },
 
         dragMove: function(position) {
@@ -168,6 +169,7 @@ define(function(require, exports, module) {
             this._minder.layout(300);
             this._leaveDragMode();
             this._minder.fire('contentchange');
+            this._minder.fire('dragend');
         },
 
         // 进入拖放模式：

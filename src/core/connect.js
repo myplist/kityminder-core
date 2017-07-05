@@ -53,7 +53,10 @@ define(function(require, exports, module) {
         getConnectContainer: function() {
             return this._connectContainer;
         },
-
+        /**
+         * 只是设置了空connect对象，update的时候会根据template设置值
+         * @param node
+         */
         createConnect: function(node) {
             if (node.isRoot()) return;
 
@@ -65,6 +68,27 @@ define(function(require, exports, module) {
             this.updateConnect(node);
         },
 
+        createConnection: function(fromNode, toNode, relationship) {
+            var connection = new kity.Path();
+            this._connectContainer.addShape(connection);
+            connection.setVisible(true);
+
+            var provider = fromNode.getConnectProvider();
+
+            var strokeColor = fromNode.getStyle('connect-color') || 'white',
+                strokeWidth = fromNode.getStyle('connect-width') || 2;
+
+            connection.stroke(strokeColor, strokeWidth);
+
+            provider(fromNode, toNode, connection, strokeWidth, strokeColor);
+
+            return connection;
+        },
+
+        removeConnection: function(connection) {
+            this._connectContainer.removeShape(connection);
+        },
+
         removeConnect: function(node) {
             var me = this;
             node.traverse(function(node) {
@@ -72,7 +96,10 @@ define(function(require, exports, module) {
                 node._connection = null;
             });
         },
-
+        /**
+         * 事件驱动connect更新重绘
+         * @param node
+         */
         updateConnect: function(node) {
 
             var connection = node._connection;

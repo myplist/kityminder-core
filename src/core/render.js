@@ -177,10 +177,8 @@ define(function(require, exports, module) {
                 node._contentBox = new kity.Box();
 
                 node._renderers.forEach(function(renderer) {
-
                     // 判断当前上下文是否应该渲染
                     if (renderer.shouldRender(node)) {
-
                         // 应该渲染，但是渲染图形没创建过，需要创建
                         if (!renderer.getRenderShape()) {
                             renderer.setRenderShape(renderer.create(node));
@@ -190,10 +188,8 @@ define(function(require, exports, module) {
                                 node.getRenderContainer().appendShape(renderer.getRenderShape());
                             }
                         }
-
                         // 强制让渲染图形显示
                         renderer.getRenderShape().setVisible(true);
-
                         // 更新渲染图形
                         latestBox = renderer.update(renderer.getRenderShape(), node, node._contentBox);
 
@@ -204,10 +200,8 @@ define(function(require, exports, module) {
                             node._contentBox = node._contentBox.merge(latestBox);
                             renderer.contentBox = latestBox;
                         }
-                    }
-
-                    // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
-                    else if (renderer.getRenderShape()) {
+                    } else if (renderer.getRenderShape()) {
+                        // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
                         renderer.getRenderShape().setVisible(false);
                     }
 

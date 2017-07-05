@@ -37,7 +37,6 @@ define(function(require, exports, module) {
                 height: box.height + paddingTop + paddingBottom
             };
 
-
             var radius = node.getStyle('radius');
             // 天盘图圆形的情况
             if (shape && shape == 'circle') {

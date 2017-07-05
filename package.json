@@ -8,6 +8,9 @@
     "name": "Baidu FEX",
     "url": "http://fex.baidu.com"
   },
+  "scripts": {
+    "dev": "live-server --port=8888 --open=dev.html"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/fex-team/kityminder-core.git"
@@ -30,7 +33,8 @@
     }
   ],
   "dependencies": {
-    "grunt-contrib-copy": "^0.8.0"
+    "grunt-contrib-copy": "^0.8.0",
+    "live-server": "^1.2.0"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^1.1.5",
