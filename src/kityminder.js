@@ -62,6 +62,7 @@ define(function(require, exports, module) {
     require('./module/select');
     require('./module/style');
     require('./module/text');
+    require('./module/undertext');
     require('./module/view');
     require('./module/zoom');
 

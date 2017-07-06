@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-06-20
+ * kityminder - v1.4.43 - 2017-07-06
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -687,12 +687,29 @@ _p[11] = {
             getConnectContainer: function() {
                 return this._connectContainer;
             },
+            /**
+         * 只是设置了空connect对象，update的时候会根据template设置值
+         * @param node
+         */
             createConnect: function(node) {
                 if (node.isRoot()) return;
                 var connection = new kity.Path();
                 node._connection = connection;
                 this._connectContainer.addShape(connection);
                 this.updateConnect(node);
+            },
+            createConnection: function(fromNode, toNode, relationship) {
+                var connection = new kity.Path();
+                this._connectContainer.addShape(connection);
+                connection.setVisible(true);
+                var provider = fromNode.getConnectProvider();
+                var strokeColor = fromNode.getStyle("connect-color") || "white", strokeWidth = fromNode.getStyle("connect-width") || 2;
+                connection.stroke(strokeColor, strokeWidth);
+                provider(fromNode, toNode, connection, strokeWidth, strokeColor);
+                return connection;
+            },
+            removeConnection: function(connection) {
+                this._connectContainer.removeShape(connection);
             },
             removeConnect: function(node) {
                 var me = this;
@@ -701,6 +718,10 @@ _p[11] = {
                     node._connection = null;
                 });
             },
+            /**
+         * 事件驱动connect更新重绘
+         * @param node
+         */
             updateConnect: function(node) {
                 var connection = node._connection;
                 var parent = node.parent;
@@ -2970,6 +2991,7 @@ _p[27] = {
         function createMinderExtension() {
             function createRendererForNode(node, registered) {
                 var renderers = [];
+                // 虽然render位置不由该顺序影响，但render的渲染顺序会影响node._contentBox从而影响到其它渲染器
                 [ "center", "left", "right", "top", "bottom", "outline", "outside" ].forEach(function(section) {
                     var before = "before" + section;
                     var after = "after" + section;
@@ -3084,6 +3106,7 @@ _p[27] = {
                                 renderer.contentBox = latestBox;
                             }
                         } else if (renderer.getRenderShape()) {
+                            // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
                             renderer.getRenderShape().setVisible(false);
                         }
                     });
@@ -3827,23 +3850,24 @@ _p[35] = {
         _p.r(61);
         _p.r(62);
         _p.r(63);
-        _p.r(67);
         _p.r(64);
-        _p.r(66);
+        _p.r(68);
         _p.r(65);
+        _p.r(67);
+        _p.r(66);
         _p.r(40);
         _p.r(36);
         _p.r(37);
         _p.r(38);
         _p.r(39);
         _p.r(41);
-        _p.r(74);
+        _p.r(75);
+        _p.r(78);
         _p.r(77);
         _p.r(76);
-        _p.r(75);
-        _p.r(77);
-        _p.r(79);
         _p.r(78);
+        _p.r(80);
+        _p.r(79);
         _p.r(0);
         _p.r(1);
         _p.r(2);
@@ -3851,12 +3875,12 @@ _p[35] = {
         _p.r(4);
         _p.r(5);
         _p.r(6);
-        _p.r(68);
-        _p.r(72);
         _p.r(69);
-        _p.r(71);
-        _p.r(70);
         _p.r(73);
+        _p.r(70);
+        _p.r(72);
+        _p.r(71);
+        _p.r(74);
         module.exports = kityminder;
     }
 };
@@ -4775,6 +4799,7 @@ _p[45] = {
                 // 只记录开始位置，不马上开启拖放模式
                 // 这个位置同时是拖放范围收缩时的焦点位置（中心）
                 this._startPosition = position;
+                this._minder.fire("dragstart");
             },
             dragMove: function(position) {
                 // 启动拖放模式需要最小的移动距离
@@ -4836,6 +4861,7 @@ _p[45] = {
                 this._minder.layout(300);
                 this._leaveDragMode();
                 this._minder.fire("contentchange");
+                this._minder.fire("dragend");
             },
             // 进入拖放模式：
             //    1. 计算拖放源和允许的拖放目标
@@ -5217,9 +5243,10 @@ _p[46] = {
                     if (!node.parent) return;
                     var visible = node.parent.isExpanded();
                     expander.setState(visible && node.children.length ? node.getData(EXPAND_STATE_DATA) : "hide");
+                    // @robbenlee.lsp 根据需求把expander设置在结点尾部
                     var vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle("stroke-width"));
                     var position = node.getVertexIn().offset(vector.reverse());
-                    this.expander.setTranslate(position);
+                    this.expander.setTranslate(node._contentBox.right + expander.radius, 0);
                 }
             });
             return {
@@ -6590,7 +6617,7 @@ _p[57] = {
                     } else {
                         a += "耀";
                         while (a.length % 32 !== 27) {
-                            a += "\0";
+                            a += "\x00";
                         }
                         a += "";
                     }
@@ -6668,7 +6695,7 @@ _p[57] = {
                         colorMapping[resource] = nextIndex;
                     }
                     // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                    return RESOURCE_COLOR_SERIES[colorMapping[resource]] || kity.Color.createHSL(Math.floor(this.getHashCode(resource) / 2147483647 * 359), 100, 85);
+                    return kity.Color.createHSLA(0, 0, 18, .4);
                 },
                 /**
              * 获得已使用的资源的列表
@@ -6787,7 +6814,7 @@ _p[57] = {
                         this.lastResourceName = resourceName;
                         this.lastBox = box;
                     }
-                    text.setX(paddingX).fill(color.dec("l", 70));
+                    text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, .4));
                     rect = this.rect;
                     rect.setPosition(0, box.y - paddingY);
                     this.width = Math.round(box.width + paddingX * 2);
@@ -7132,7 +7159,7 @@ _p[60] = {
                 "impact,chicago": -.15,
                 "times new roman": -.1,
                 "arial black,avant garde": -.17,
-                default: 0
+                "default": 0
             },
             ie: {
                 10: {
@@ -7141,7 +7168,7 @@ _p[60] = {
                     "impact,chicago": -.08,
                     "times new roman": .04,
                     "arial black,avant garde": -.17,
-                    default: -.15
+                    "default": -.15
                 },
                 11: {
                     "微软雅黑,Microsoft YaHei": -.17,
@@ -7151,7 +7178,7 @@ _p[60] = {
                     "times new roman": .04,
                     "sans-serif": -.16,
                     "arial black,avant garde": -.17,
-                    default: -.15
+                    "default": -.15
                 }
             },
             edge: {
@@ -7161,7 +7188,7 @@ _p[60] = {
                 "impact,chicago": -.08,
                 "sans-serif": -.16,
                 "arial black,avant garde": -.17,
-                default: -.15
+                "default": -.15
             },
             sg: {
                 "微软雅黑,Microsoft YaHei": -.15,
@@ -7170,7 +7197,7 @@ _p[60] = {
                 "impact,chicago": -.16,
                 "times new roman": -.03,
                 "arial black,avant garde": -.22,
-                default: -.15
+                "default": -.15
             },
             chrome: {
                 Mac: {
@@ -7179,7 +7206,7 @@ _p[60] = {
                     "impact,chicago": -.13,
                     "times new roman": -.1,
                     "arial black,avant garde": -.17,
-                    default: 0
+                    "default": 0
                 },
                 Win: {
                     "微软雅黑,Microsoft YaHei": -.15,
@@ -7188,7 +7215,7 @@ _p[60] = {
                     "comic sans ms": -.2,
                     "impact,chicago": -.12,
                     "times new roman": -.02,
-                    default: -.15
+                    "default": -.15
                 },
                 Lux: {
                     "andale mono": -.05,
@@ -7196,7 +7223,7 @@ _p[60] = {
                     "impact,chicago": -.13,
                     "times new roman": -.1,
                     "arial black,avant garde": -.17,
-                    default: 0
+                    "default": 0
                 }
             },
             firefox: {
@@ -7207,7 +7234,7 @@ _p[60] = {
                     "impact,chicago": -.15,
                     "arial black,avant garde": -.17,
                     "times new roman": -.1,
-                    default: .05
+                    "default": .05
                 },
                 Win: {
                     "微软雅黑,Microsoft YaHei": -.16,
@@ -7218,7 +7245,7 @@ _p[60] = {
                     "times new roman": -.22,
                     "sans-serif": -.22,
                     "arial black,avant garde": -.17,
-                    default: -.16
+                    "default": -.16
                 },
                 Lux: {
                     "宋体,SimSun": -.2,
@@ -7233,7 +7260,7 @@ _p[60] = {
                     "times new roman": -.2,
                     "sans-serif": -.2,
                     "arial black,avant garde": -.2,
-                    default: -.16
+                    "default": -.16
                 }
             }
         };
@@ -7363,8 +7390,253 @@ _p[60] = {
     }
 };
 
-//src/module/view.js
+//src/module/undertext.js
 _p[61] = {
+    value: function(require, exports, module) {
+        var kity = _p.r(17);
+        var utils = _p.r(33);
+        var Minder = _p.r(19);
+        var MinderNode = _p.r(21);
+        var Command = _p.r(9);
+        var Module = _p.r(20);
+        var Renderer = _p.r(27);
+        /**
+     * 针对不同系统、不同浏览器、不同字体做居中兼容性处理
+     * 暂时未增加Linux的处理
+     */
+        var FONT_ADJUST = {
+            safari: {
+                "微软雅黑,Microsoft YaHei": -.17,
+                "楷体,楷体_GB2312,SimKai": -.1,
+                "隶书, SimLi": -.1,
+                "comic sans ms": -.23,
+                "impact,chicago": -.15,
+                "times new roman": -.1,
+                "arial black,avant garde": -.17,
+                "default": 0
+            },
+            ie: {
+                10: {
+                    "微软雅黑,Microsoft YaHei": -.17,
+                    "comic sans ms": -.17,
+                    "impact,chicago": -.08,
+                    "times new roman": .04,
+                    "arial black,avant garde": -.17,
+                    "default": -.15
+                },
+                11: {
+                    "微软雅黑,Microsoft YaHei": -.17,
+                    "arial,helvetica,sans-serif": -.17,
+                    "comic sans ms": -.17,
+                    "impact,chicago": -.08,
+                    "times new roman": .04,
+                    "sans-serif": -.16,
+                    "arial black,avant garde": -.17,
+                    "default": -.15
+                }
+            },
+            edge: {
+                "微软雅黑,Microsoft YaHei": -.15,
+                "arial,helvetica,sans-serif": -.17,
+                "comic sans ms": -.17,
+                "impact,chicago": -.08,
+                "sans-serif": -.16,
+                "arial black,avant garde": -.17,
+                "default": -.15
+            },
+            sg: {
+                "微软雅黑,Microsoft YaHei": -.15,
+                "arial,helvetica,sans-serif": -.05,
+                "comic sans ms": -.22,
+                "impact,chicago": -.16,
+                "times new roman": -.03,
+                "arial black,avant garde": -.22,
+                "default": -.15
+            },
+            chrome: {
+                Mac: {
+                    "andale mono": -.05,
+                    "comic sans ms": -.3,
+                    "impact,chicago": -.13,
+                    "times new roman": -.1,
+                    "arial black,avant garde": -.17,
+                    "default": 0
+                },
+                Win: {
+                    "微软雅黑,Microsoft YaHei": -.15,
+                    "arial,helvetica,sans-serif": -.02,
+                    "arial black,avant garde": -.2,
+                    "comic sans ms": -.2,
+                    "impact,chicago": -.12,
+                    "times new roman": -.02,
+                    "default": -.15
+                },
+                Lux: {
+                    "andale mono": -.05,
+                    "comic sans ms": -.3,
+                    "impact,chicago": -.13,
+                    "times new roman": -.1,
+                    "arial black,avant garde": -.17,
+                    "default": 0
+                }
+            },
+            firefox: {
+                Mac: {
+                    "微软雅黑,Microsoft YaHei": -.2,
+                    "宋体,SimSun": .05,
+                    "comic sans ms": -.2,
+                    "impact,chicago": -.15,
+                    "arial black,avant garde": -.17,
+                    "times new roman": -.1,
+                    "default": .05
+                },
+                Win: {
+                    "微软雅黑,Microsoft YaHei": -.16,
+                    "andale mono": -.17,
+                    "arial,helvetica,sans-serif": -.17,
+                    "comic sans ms": -.22,
+                    "impact,chicago": -.23,
+                    "times new roman": -.22,
+                    "sans-serif": -.22,
+                    "arial black,avant garde": -.17,
+                    "default": -.16
+                },
+                Lux: {
+                    "宋体,SimSun": -.2,
+                    "微软雅黑,Microsoft YaHei": -.2,
+                    "黑体, SimHei": -.2,
+                    "隶书, SimLi": -.2,
+                    "楷体,楷体_GB2312,SimKai": -.2,
+                    "andale mono": -.2,
+                    "arial,helvetica,sans-serif": -.2,
+                    "comic sans ms": -.2,
+                    "impact,chicago": -.2,
+                    "times new roman": -.2,
+                    "sans-serif": -.2,
+                    "arial black,avant garde": -.2,
+                    "default": -.16
+                }
+            }
+        };
+        var UnderTextRenderer = kity.createClass("UnderTextRenderer", {
+            base: Renderer,
+            create: function(node) {
+                var group = new kity.Group().setId(utils.uuid("node_text"));
+                group.on("mouseover", function(e) {
+                    node.getMinder().fire("showmemodetail", {
+                        node: node
+                    });
+                    console.info("showmemodetail");
+                });
+                return group;
+            },
+            update: function(textGroup, node, box) {
+                function getDataOrStyle(name) {
+                    return node.getData(name) || node.getStyle(name);
+                }
+                // 有就渲染
+                var nodeText = node.getData("memo");
+                if (!nodeText) {
+                    return;
+                }
+                var textArr = nodeText ? nodeText.split("\n") : [ " " ];
+                // 样式设置
+                var lineHeight = node.getStyle("line-height");
+                var fontFamily = getDataOrStyle("font-family") || "default";
+                var fontSize = 8;
+                var height = lineHeight * fontSize * textArr.length - (lineHeight - 1) * fontSize;
+                var yStart = -height / 2;
+                var Browser = kity.Browser;
+                var adjust;
+                if (Browser.chrome || Browser.opera || Browser.bd || Browser.lb === "chrome") {
+                    adjust = FONT_ADJUST["chrome"][Browser.platform][fontFamily];
+                } else if (Browser.gecko) {
+                    adjust = FONT_ADJUST["firefox"][Browser.platform][fontFamily];
+                } else if (Browser.sg) {
+                    adjust = FONT_ADJUST["sg"][fontFamily];
+                } else if (Browser.safari) {
+                    adjust = FONT_ADJUST["safari"][fontFamily];
+                } else if (Browser.ie) {
+                    adjust = FONT_ADJUST["ie"][Browser.version][fontFamily];
+                } else if (Browser.edge) {
+                    adjust = FONT_ADJUST["edge"][fontFamily];
+                } else if (Browser.lb) {
+                    // 猎豹浏览器的ie内核兼容性模式下
+                    adjust = .9;
+                }
+                var paddingLeft = node.getStyle("padding-left");
+                textGroup.setTranslate(paddingLeft, (adjust || 0) * fontSize);
+                var textLength = textArr.length;
+                var textGroupLength = textGroup.getItems().length;
+                var i, ci, textShape, text;
+                if (textLength < textGroupLength) {
+                    for (i = textLength, ci; ci = textGroup.getItem(i); ) {
+                        textGroup.removeItem(i);
+                    }
+                } else if (textLength > textGroupLength) {
+                    var growth = textLength - textGroupLength;
+                    while (growth--) {
+                        textShape = new kity.Text().setAttr("text-rendering", "inherit");
+                        if (kity.Browser.ie || kity.Browser.edge) {
+                            textShape.setVerticalAlign("top");
+                        } else {
+                            textShape.setAttr("dominant-baseline", "text-before-edge");
+                        }
+                        textGroup.addItem(textShape);
+                    }
+                }
+                for (i = 0, text, textShape; text = textArr[i], textShape = textGroup.getItem(i); i++) {
+                    textShape.setContent(text);
+                    if (kity.Browser.ie || kity.Browser.edge) {
+                        textShape.fixPosition();
+                    }
+                }
+                return function() {
+                    var rBox = new kity.Box(), r = Math.round;
+                    textGroup.eachItem(function(i, textShape) {
+                        var y = yStart + i * fontSize * lineHeight;
+                        textShape.setY(y + box.height + yStart);
+                        textShape.setX(box.left);
+                        textShape.fill(kity.Color.createHSLA(360, 8, 80, .6));
+                        textShape.setSize(fontSize);
+                        var bbox = textShape.getBoundaryBox();
+                        rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
+                    });
+                }();
+            }
+        });
+        var UnderTextCommand = kity.createClass({
+            base: Command,
+            execute: function(minder, text) {
+                var node = minder.getSelectedNode();
+                if (node) {
+                    node.setData("memo", text);
+                    node.render();
+                    minder.layout();
+                }
+            },
+            queryState: function(minder) {
+                return minder.getSelectedNodes().length == 1 ? 0 : -1;
+            },
+            queryValue: function(minder) {
+                var node = minder.getSelectedNode();
+                return node ? node.getData("memo") : null;
+            }
+        });
+        Module.register("undertext", {
+            commands: {
+                undertext: UnderTextCommand
+            },
+            renderers: {
+                afteroutline: UnderTextRenderer
+            }
+        });
+        module.exports = UnderTextRenderer;
+    }
+};
+
+//src/module/view.js
+_p[62] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7686,7 +7958,7 @@ _p[61] = {
 };
 
 //src/module/zoom.js
-_p[62] = {
+_p[63] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7868,7 +8140,7 @@ _p[62] = {
 };
 
 //src/protocol/json.js
-_p[63] = {
+_p[64] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         data.registerProtocol("json", module.exports = {
@@ -7887,13 +8159,13 @@ _p[63] = {
 };
 
 //src/protocol/markdown.js
-_p[64] = {
+_p[65] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var LINE_ENDING_SPLITER = /\r\n|\r|\n/;
         var EMPTY_LINE = "";
-        var NOTE_MARK_START = "\x3c!--Note--\x3e";
-        var NOTE_MARK_CLOSE = "\x3c!--/Note--\x3e";
+        var NOTE_MARK_START = "<!--Note-->";
+        var NOTE_MARK_CLOSE = "<!--/Note-->";
         function encode(json) {
             return _build(json, 1).join("\n");
         }
@@ -8018,7 +8290,7 @@ _p[64] = {
 };
 
 //src/protocol/png.js
-_p[65] = {
+_p[66] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var data = _p.r(12);
@@ -8239,7 +8511,7 @@ _p[65] = {
 };
 
 //src/protocol/svg.js
-_p[66] = {
+_p[67] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         /**
@@ -8511,7 +8783,7 @@ _p[66] = {
 };
 
 //src/protocol/text.js
-_p[67] = {
+_p[68] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var Browser = _p.r(17).Browser;
@@ -8523,8 +8795,8 @@ _p[67] = {
         var LINE_ENDING = "\r", LINE_ENDING_SPLITER = /\r\n|\r|\n/, TAB_CHAR = function(Browser) {
             if (Browser.gecko) {
                 return {
-                    REGEXP: new RegExp("^(\t|" + String.fromCharCode(160, 160, 32, 160) + ")"),
-                    DELETE: new RegExp("^(\t|" + String.fromCharCode(160, 160, 32, 160) + ")+")
+                    REGEXP: new RegExp("^(	|" + String.fromCharCode(160, 160, 32, 160) + ")"),
+                    DELETE: new RegExp("^(	|" + String.fromCharCode(160, 160, 32, 160) + ")+")
                 };
             } else if (Browser.ie || Browser.edge) {
                 // ie系列和edge比较特别，\t在div中会被直接转义成SPACE故只好使用SPACE来做处理
@@ -8640,7 +8912,7 @@ _p[67] = {
         function encode(json, level) {
             var local = "";
             level = level || 0;
-            local += repeat("\t", level);
+            local += repeat("	", level);
             local += encodeWrap(json.data.text) + LINE_ENDING;
             if (json.children) {
                 json.children.forEach(function(child) {
@@ -8742,7 +9014,7 @@ _p[67] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[68] = {
+_p[69] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("default", {
@@ -8776,7 +9048,7 @@ _p[68] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[69] = {
+_p[70] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("filetree", {
@@ -8804,7 +9076,7 @@ _p[69] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[70] = {
+_p[71] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("fish-bone", {
@@ -8846,7 +9118,7 @@ _p[70] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[71] = {
+_p[72] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("right", {
@@ -8870,7 +9142,7 @@ _p[71] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[72] = {
+_p[73] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("structure", {
@@ -8893,7 +9165,7 @@ _p[72] = {
  * @author: along
  * @copyright: bpd729@163.com, 2015
  */
-_p[73] = {
+_p[74] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("tianpan", {
@@ -8914,7 +9186,7 @@ _p[73] = {
 };
 
 //src/theme/default.js
-_p[74] = {
+_p[75] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "classic", "classic-compact" ].forEach(function(name) {
@@ -8922,40 +9194,41 @@ _p[74] = {
             /* jscs:disable maximumLineLength */
             theme.register(name, {
                 background: '#3A4144 url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAIAAAACDbGyAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDowQzg5QTQ0NDhENzgxMUUzOENGREE4QTg0RDgzRTZDNyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDowQzg5QTQ0NThENzgxMUUzOENGREE4QTg0RDgzRTZDNyI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkMwOEQ1NDRGOEQ3NzExRTM4Q0ZEQThBODREODNFNkM3IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkMwOEQ1NDUwOEQ3NzExRTM4Q0ZEQThBODREODNFNkM3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+e9P33AAAACVJREFUeNpisXJ0YUACTAyoAMr/+eM7EGGRZ4FQ7BycEAZAgAEAHbEGtkoQm/wAAAAASUVORK5CYII=") repeat',
-                "root-color": "#430",
-                "root-background": "#e9df98",
-                "root-stroke": "#e9df98",
+                "root-color": "white",
+                "root-background": "#55A7FA",
+                "root-stroke": "none",
                 "root-font-size": 24,
                 "root-padding": compact ? [ 10, 25 ] : [ 15, 25 ],
                 "root-margin": compact ? [ 15, 25 ] : [ 30, 100 ],
                 "root-radius": 30,
-                "root-space": 10,
-                "root-shadow": "rgba(0, 0, 0, .25)",
-                "main-color": "#333",
-                "main-background": "#a4c5c0",
-                "main-stroke": "#a4c5c0",
-                "main-font-size": 16,
-                "main-padding": compact ? [ 5, 15 ] : [ 6, 20 ],
-                "main-margin": compact ? [ 5, 10 ] : 20,
-                "main-radius": 10,
-                "main-space": 5,
-                "main-shadow": "rgba(0, 0, 0, .25)",
+                "root-space": 4,
+                // 'root-shadow': 'rgba(0, 0, 0, .25)',
+                "main-color": "white",
+                "main-background": "transparent",
+                "main-stroke": "none",
+                "main-font-size": 12,
+                "main-padding": compact ? [ 5, 10 ] : [ 6, 20 ],
+                "main-margin": compact ? [ 15, 8 ] : 15,
+                "main-radius": 5,
+                "main-space": 4,
+                // 'main-shadow': 'rgba(0, 0, 0, .25)',
                 "sub-color": "white",
                 "sub-background": "transparent",
                 "sub-stroke": "none",
                 "sub-font-size": 12,
                 "sub-padding": [ 5, 10 ],
-                "sub-margin": compact ? [ 5, 10 ] : [ 15, 20 ],
+                "sub-margin": compact ? [ 15, 8 ] : 15,
                 "sub-tree-margin": 30,
                 "sub-radius": 5,
-                "sub-space": 5,
+                "sub-space": 4,
                 "connect-color": "white",
                 "connect-width": 2,
-                "main-connect-width": 3,
+                "main-connect-width": 2,
                 "connect-radius": 5,
-                "selected-background": "rgb(254, 219, 0)",
+                // 'selected-background': 'rgb(254, 219, 0)',
                 "selected-stroke": "rgb(254, 219, 0)",
-                "selected-color": "black",
+                "selected-stroke-width": "4",
+                // 'selected-color': 'black',
                 "marquee-background": "rgba(255,255,255,.3)",
                 "marquee-stroke": "white",
                 "drop-hint-color": "yellow",
@@ -8973,7 +9246,7 @@ _p[74] = {
 };
 
 //src/theme/fish.js
-_p[75] = {
+_p[76] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("fish", {
@@ -9024,7 +9297,7 @@ _p[75] = {
 };
 
 //src/theme/fresh.js
-_p[76] = {
+_p[77] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var theme = _p.r(32);
@@ -9093,7 +9366,7 @@ _p[76] = {
 };
 
 //src/theme/snow.js
-_p[77] = {
+_p[78] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "snow", "snow-compact" ].forEach(function(name) {
@@ -9148,7 +9421,7 @@ _p[77] = {
 };
 
 //src/theme/tianpan.js
-_p[78] = {
+_p[79] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "tianpan", "tianpan-compact" ].forEach(function(name) {
@@ -9210,7 +9483,7 @@ _p[78] = {
 };
 
 //src/theme/wire.js
-_p[79] = {
+_p[80] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("wire", {

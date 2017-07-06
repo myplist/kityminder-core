@@ -63,7 +63,8 @@ define(function(require, exports, module) {
                 }
 
                 // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                return RESOURCE_COLOR_SERIES[colorMapping[resource]] || kity.Color.createHSL(Math.floor(this.getHashCode(resource) / 0x7FFFFFFF * 359), 100, 85);
+                return kity.Color.createHSLA(0, 0, 18, 0.4);
+                // return RESOURCE_COLOR_SERIES[colorMapping[resource]] || kity.Color.createHSL(Math.floor(this.getHashCode(resource) / 0x7FFFFFFF * 359), 100, 85);
             },
 
             /**
@@ -226,7 +227,7 @@ define(function(require, exports, module) {
 
                 }
 
-                text.setX(paddingX).fill(color.dec('l', 70));
+                text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, 0.4));
 
                 rect = this.rect;
                 rect.setPosition(0, box.y - paddingY);

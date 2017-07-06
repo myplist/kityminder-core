@@ -126,26 +126,35 @@ define(function(require, exports, module) {
         },
     };
 
-    var TextRenderer = kity.createClass('TextRenderer', {
+    var UnderTextRenderer = kity.createClass('UnderTextRenderer', {
         base: Renderer,
 
-        create: function() {
-            return new kity.Group().setId(utils.uuid('node_text'));
+        create: function(node) {
+            var group = new kity.Group().setId(utils.uuid('node_text'));
+            group.on('mouseover', function(e) {
+                node.getMinder().fire('showmemodetail', {
+                    node: node
+                });
+                console.info('showmemodetail');
+            });
+
+            return group;
         },
 
-        update: function(textGroup, node) {
-
+        update: function(textGroup, node, box) {
             function getDataOrStyle(name) {
                 return node.getData(name) || node.getStyle(name);
             }
-
-            var nodeText = node.getText();
+            // 有就渲染
+            var nodeText = node.getData('memo');
+            if ( !nodeText ) {
+                return;
+            }
             var textArr = nodeText ? nodeText.split('\n') : [' '];
-
+            // 样式设置
             var lineHeight = node.getStyle('line-height');
-
-            var fontSize = getDataOrStyle('font-size');
             var fontFamily = getDataOrStyle('font-family') || 'default';
+            var fontSize = 8;
 
             var height = (lineHeight * fontSize) * textArr.length - (lineHeight - 1) * fontSize;
             var yStart = -height / 2;
@@ -168,16 +177,10 @@ define(function(require, exports, module) {
                 // 猎豹浏览器的ie内核兼容性模式下
                 adjust = 0.9;
             }
-
-            textGroup.setTranslate(0, (adjust || 0) * fontSize);
-
-            var rBox = new kity.Box(),
-                r = Math.round;
-
-            this.setTextStyle(node, textGroup);
+            var paddingLeft = node.getStyle('padding-left');
+            textGroup.setTranslate(paddingLeft, (adjust || 0) * fontSize);
 
             var textLength = textArr.length;
-
             var textGroupLength = textGroup.getItems().length;
 
             var i, ci, textShape, text;
@@ -208,45 +211,30 @@ define(function(require, exports, module) {
                 }
             }
 
-            this.setTextStyle(node, textGroup);
-
-            var textHash = node.getText() +
-                ['font-size', 'font-name', 'font-weight', 'font-style'].map(getDataOrStyle).join('/');
-
-            if (node._currentTextHash == textHash && node._currentTextGroupBox) return node._currentTextGroupBox;
-
-            node._currentTextHash = textHash;
-
-            return function() {
+            return (function() {
+                var rBox = new kity.Box(),
+                    r = Math.round;
                 textGroup.eachItem(function(i, textShape) {
                     var y = yStart + i * fontSize * lineHeight;
-                    textShape.setY(y);
+                    textShape.setY(y + box.height + yStart);
+                    textShape.setX(box.left);
+                    textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
+                    textShape.setSize(fontSize);
                     var bbox = textShape.getBoundaryBox();
-                    rBox = rBox.merge(new kity.Box(0, y, bbox.height && bbox.width || 1, fontSize));
+                    rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
                 });
 
-                var nBox = new kity.Box(r(rBox.x), r(rBox.y), r(rBox.width), r(rBox.height));
-
-                node._currentTextGroupBox = nBox;
-                return nBox;
-            };
-
-        },
-        
-        setTextStyle: function(node, text) {
-            var hooks = TextRenderer._styleHooks;
-            hooks.forEach(function(hook) {
-                hook(node, text);
-            });
+                // return new kity.Box(r(rBox.x), r(rBox.y), r(rBox.width), r(rBox.height));
+            })();
         }
     });
 
-    var TextCommand = kity.createClass({
+    var UnderTextCommand = kity.createClass({
         base: Command,
         execute: function(minder, text) {
             var node = minder.getSelectedNode();
             if (node) {
-                node.setText(text);
+                node.setData('memo', text);
                 node.render();
                 minder.layout();
             }
@@ -256,32 +244,18 @@ define(function(require, exports, module) {
         },
         queryValue: function(minder) {
             var node = minder.getSelectedNode();
-            return node ? node.getText() : null;
+            return node ? node.getData('memo') : null;
         }
     });
 
-    utils.extend(TextRenderer, {
-        _styleHooks: [],
-
-        registerStyleHook: function(fn) {
-            TextRenderer._styleHooks.push(fn);
-        }
-    });
-
-    kity.extendClass(MinderNode, {
-        getTextGroup: function() {
-            return this.getRenderer('TextRenderer').getRenderShape();
-        }
-    });
-
-    Module.register('text', {
+    Module.register('undertext', {
         'commands': {
-            'text': TextCommand
+            'undertext': UnderTextCommand
         },
         'renderers': {
-            center: TextRenderer
+            afteroutline: UnderTextRenderer
         }
     });
 
-    module.exports = TextRenderer;
+    module.exports = UnderTextRenderer;
 });

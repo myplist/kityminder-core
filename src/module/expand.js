@@ -195,11 +195,11 @@ define(function(require, exports, module) {
                 var visible = node.parent.isExpanded();
 
                 expander.setState(visible && node.children.length ? node.getData(EXPAND_STATE_DATA) : 'hide');
-
+                // @robbenlee.lsp 根据需求把expander设置在结点尾部
                 var vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle('stroke-width'));
                 var position = node.getVertexIn().offset(vector.reverse());
 
-                this.expander.setTranslate(position);
+                this.expander.setTranslate(node._contentBox.right + expander.radius, 0);
             }
         });
 

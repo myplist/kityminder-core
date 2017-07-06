@@ -38,10 +38,21 @@
                 "data": {"text": "hello"}, 
                 "children": []
             }, {
-                "data": {"text": "hello","resource": ["world"]}, 
-                "children": []
+                "data": {"text": "hello","resource": ["world"], "note": "哥", "memo": "为了世界和平"}, 
+                "children": [{
+                    "data": {"text": "world", "memo": "2017-07-06 00:00:00", "resource": ["world"]}, 
+                    "children": []
+                }, {
+                    "data": {"text": "world", "progress": "5", "memo": "详情你好详情你好"}, 
+                    "children": []
+                }, {
+                    "data": {"text": "world", "resource":["hello", "hello", "hello"]}, 
+                    "children": []
+                }]
             }]
-        }
+        }, 
+        "theme": "classic-compact", 
+        "template": "right"
     }
     </script>
 </body>

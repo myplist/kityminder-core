@@ -61,7 +61,7 @@ define(function(require, exports, module) {
 
         function createRendererForNode(node, registered) {
             var renderers = [];
-
+            // 虽然render位置不由该顺序影响，但render的渲染顺序会影响node._contentBox从而影响到其它渲染器
             ['center', 'left', 'right', 'top', 'bottom', 'outline', 'outside'].forEach(function(section) {
                 var before = 'before' + section;
                 var after = 'after' + section;
@@ -101,7 +101,6 @@ define(function(require, exports, module) {
                         node: node
                     });
                 }
-
                 // 所有节点渲染器数量是一致的
                 rendererCount = nodes[0]._renderers.length;
 
