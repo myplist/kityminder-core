@@ -63,7 +63,7 @@ define(function(require, exports, module) {
                 }
 
                 // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                return kity.Color.createHSLA(0, 0, 18, 0.4);
+                return kity.Color.createHSLA(0, 0, 18, 0.5);
                 // return RESOURCE_COLOR_SERIES[colorMapping[resource]] || kity.Color.createHSL(Math.floor(this.getHashCode(resource) / 0x7FFFFFFF * 359), 100, 85);
             },
 
@@ -203,6 +203,19 @@ define(function(require, exports, module) {
                     .setVerticalAlign('middle');
 
                 this.addShapes([rect, text]);
+
+                this.on('mouseover', function() {
+                    this.rect.fill('rgba(255, 255, 200, .8)');
+                    this.text.fill(kity.Color.createHSLA(360, 100, 100, 1));
+                }).on('mouseout', function() {
+                    this.rect.fill(kity.Color.createHSLA(0, 0, 18, 0.4));
+                    this.text.fill(kity.Color.createHSLA(360, 100, 100, 0.4));
+                });
+                this.setStyle('cursor', 'pointer');
+            },
+
+            getText: function() {
+                return this.text;
             },
 
             setValue: function(resourceName, color) {
@@ -279,6 +292,11 @@ define(function(require, exports, module) {
                     overlay = overlays[i];
                     if (!overlay) {
                         overlay = new ResourceOverlay();
+                        // 绑定事件
+                        overlay.on('click', function() {
+                            node.getMinder().fire('showtagrequest', 
+                                {node: node, tag: this.getText()});
+                        });
                         overlays.push(overlay);
                         container.addShape(overlay);
                     }

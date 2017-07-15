@@ -131,12 +131,14 @@ define(function(require, exports, module) {
 
         create: function(node) {
             var group = new kity.Group().setId(utils.uuid('node_text'));
+
             group.on('mouseover', function(e) {
                 node.getMinder().fire('showmemodetail', {
                     node: node
                 });
                 console.info('showmemodetail');
             });
+            group.setStyle('cursor', 'pointer');
 
             return group;
         },
@@ -211,19 +213,26 @@ define(function(require, exports, module) {
                 }
             }
 
+
             return (function() {
                 var rBox = new kity.Box(),
-                    r = Math.round;
+                    r = Math.round,
+                    arrowSpace = 12;
                 textGroup.eachItem(function(i, textShape) {
                     var y = yStart + i * fontSize * lineHeight;
-                    textShape.setY(y + box.height + yStart);
-                    textShape.setX(box.left);
+                    textShape.setY(box.height / 2 + 2);
+                    textShape.setX(box.left + arrowSpace);
                     textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
                     textShape.setSize(fontSize);
                     var bbox = textShape.getBoundaryBox();
                     rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
                 });
-
+                var path = 'M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z'
+                var arrow = new kity.Path()
+                    .setTranslate(box.left, box.height / 2)
+                    .setPathData(path)
+                    .fill('grey');
+                textGroup.addShapes([arrow]);
                 // return new kity.Box(r(rBox.x), r(rBox.y), r(rBox.width), r(rBox.height));
             })();
         }

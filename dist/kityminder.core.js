@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-07-06
+ * kityminder - v1.4.43 - 2017-07-15
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -6695,7 +6695,7 @@ _p[57] = {
                         colorMapping[resource] = nextIndex;
                     }
                     // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                    return kity.Color.createHSLA(0, 0, 18, .4);
+                    return kity.Color.createHSLA(0, 0, 18, .5);
                 },
                 /**
              * 获得已使用的资源的列表
@@ -6801,6 +6801,17 @@ _p[57] = {
                     rect = this.rect = new kity.Rect().setRadius(4);
                     text = this.text = new kity.Text().setFontSize(12).setVerticalAlign("middle");
                     this.addShapes([ rect, text ]);
+                    this.on("mouseover", function() {
+                        this.rect.fill("rgba(255, 255, 200, .8)");
+                        this.text.fill(kity.Color.createHSLA(360, 100, 100, 1));
+                    }).on("mouseout", function() {
+                        this.rect.fill(kity.Color.createHSLA(0, 0, 18, .4));
+                        this.text.fill(kity.Color.createHSLA(360, 100, 100, .4));
+                    });
+                    this.setStyle("cursor", "pointer");
+                },
+                getText: function() {
+                    return this.text;
                 },
                 setValue: function(resourceName, color) {
                     var paddingX = 8, paddingY = 4, borderRadius = 4;
@@ -6856,6 +6867,13 @@ _p[57] = {
                         overlay = overlays[i];
                         if (!overlay) {
                             overlay = new ResourceOverlay();
+                            // 绑定事件
+                            overlay.on("click", function() {
+                                node.getMinder().fire("showtagrequest", {
+                                    node: node,
+                                    tag: this.getText()
+                                });
+                            });
                             overlays.push(overlay);
                             container.addShape(overlay);
                         }
@@ -7528,6 +7546,7 @@ _p[61] = {
                     });
                     console.info("showmemodetail");
                 });
+                group.setStyle("cursor", "pointer");
                 return group;
             },
             update: function(textGroup, node, box) {
@@ -7592,16 +7611,19 @@ _p[61] = {
                     }
                 }
                 return function() {
-                    var rBox = new kity.Box(), r = Math.round;
+                    var rBox = new kity.Box(), r = Math.round, arrowSpace = 12;
                     textGroup.eachItem(function(i, textShape) {
                         var y = yStart + i * fontSize * lineHeight;
-                        textShape.setY(y + box.height + yStart);
-                        textShape.setX(box.left);
+                        textShape.setY(box.height / 2 + 2);
+                        textShape.setX(box.left + arrowSpace);
                         textShape.fill(kity.Color.createHSLA(360, 8, 80, .6));
                         textShape.setSize(fontSize);
                         var bbox = textShape.getBoundaryBox();
                         rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
                     });
+                    var path = "M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z";
+                    var arrow = new kity.Path().setTranslate(box.left, box.height / 2).setPathData(path).fill("grey");
+                    textGroup.addShapes([ arrow ]);
                 }();
             }
         });
@@ -9208,16 +9230,17 @@ _p[75] = {
                 "main-stroke": "none",
                 "main-font-size": 12,
                 "main-padding": compact ? [ 5, 10 ] : [ 6, 20 ],
-                "main-margin": compact ? [ 15, 8 ] : 15,
+                "main-margin": compact ? [ 8, 10 ] : 15,
                 "main-radius": 5,
                 "main-space": 4,
                 // 'main-shadow': 'rgba(0, 0, 0, .25)',
                 "sub-color": "white",
                 "sub-background": "transparent",
+                // 'sub-background': '#55A7FA',
                 "sub-stroke": "none",
                 "sub-font-size": 12,
                 "sub-padding": [ 5, 10 ],
-                "sub-margin": compact ? [ 15, 8 ] : 15,
+                "sub-margin": compact ? [ 8, 10 ] : 15,
                 "sub-tree-margin": 30,
                 "sub-radius": 5,
                 "sub-space": 4,
