@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-07-15
+ * kityminder - v1.4.43 - 2017-07-20
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -7544,7 +7544,11 @@ _p[61] = {
                     node.getMinder().fire("showmemodetail", {
                         node: node
                     });
-                    console.info("showmemodetail");
+                });
+                group.on("mouseout", function(e) {
+                    node.getMinder().fire("hidememodetail", {
+                        node: node
+                    });
                 });
                 group.setStyle("cursor", "pointer");
                 return group;
@@ -7616,7 +7620,8 @@ _p[61] = {
                         var y = yStart + i * fontSize * lineHeight;
                         textShape.setY(box.height / 2 + 2);
                         textShape.setX(box.left + arrowSpace);
-                        textShape.fill(kity.Color.createHSLA(360, 8, 80, .6));
+                        // textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
+                        textShape.fill("grey");
                         textShape.setSize(fontSize);
                         var bbox = textShape.getBoundaryBox();
                         rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));

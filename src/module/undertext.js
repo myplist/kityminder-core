@@ -136,7 +136,11 @@ define(function(require, exports, module) {
                 node.getMinder().fire('showmemodetail', {
                     node: node
                 });
-                console.info('showmemodetail');
+            });
+            group.on('mouseout', function(e) {
+                node.getMinder().fire('hidememodetail', {
+                    node: node
+                });
             });
             group.setStyle('cursor', 'pointer');
 
@@ -222,7 +226,8 @@ define(function(require, exports, module) {
                     var y = yStart + i * fontSize * lineHeight;
                     textShape.setY(box.height / 2 + 2);
                     textShape.setX(box.left + arrowSpace);
-                    textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
+                    // textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
+                    textShape.fill('grey');
                     textShape.setSize(fontSize);
                     var bbox = textShape.getBoundaryBox();
                     rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
