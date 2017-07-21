@@ -49,6 +49,7 @@ define(function(require, exports, module) {
     require('./module/dragtree');
     require('./module/expand');
     require('./module/font');
+    require('./module/resource');
     require('./module/hyperlink');
     require('./module/image');
     require('./module/keynav');
@@ -58,13 +59,14 @@ define(function(require, exports, module) {
     require('./module/outline');
     require('./module/priority');
     require('./module/progress');
-    require('./module/resource');
     require('./module/select');
     require('./module/style');
     require('./module/text');
     require('./module/undertext');
     require('./module/view');
     require('./module/zoom');
+    require('./module/policeflag');
+    require('./module/newflag');
 
     require('./protocol/json');
     require('./protocol/text');

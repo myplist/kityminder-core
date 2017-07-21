@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-07-20
+ * kityminder - v1.4.43 - 2017-07-21
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -3834,40 +3834,42 @@ _p[35] = {
         _p.r(45);
         _p.r(46);
         _p.r(47);
+        _p.r(59);
         _p.r(48);
         _p.r(49);
         _p.r(50);
         _p.r(51);
-        _p.r(52);
         _p.r(53);
         _p.r(54);
         _p.r(55);
-        _p.r(56);
         _p.r(57);
         _p.r(58);
-        _p.r(59);
         _p.r(60);
         _p.r(61);
         _p.r(62);
         _p.r(63);
         _p.r(64);
-        _p.r(68);
         _p.r(65);
-        _p.r(67);
+        _p.r(56);
+        _p.r(52);
         _p.r(66);
+        _p.r(70);
+        _p.r(67);
+        _p.r(69);
+        _p.r(68);
         _p.r(40);
         _p.r(36);
         _p.r(37);
         _p.r(38);
         _p.r(39);
         _p.r(41);
-        _p.r(75);
-        _p.r(78);
         _p.r(77);
-        _p.r(76);
-        _p.r(78);
         _p.r(80);
         _p.r(79);
+        _p.r(78);
+        _p.r(80);
+        _p.r(82);
+        _p.r(81);
         _p.r(0);
         _p.r(1);
         _p.r(2);
@@ -3875,12 +3877,12 @@ _p[35] = {
         _p.r(4);
         _p.r(5);
         _p.r(6);
-        _p.r(69);
-        _p.r(73);
-        _p.r(70);
-        _p.r(72);
         _p.r(71);
+        _p.r(75);
+        _p.r(72);
         _p.r(74);
+        _p.r(73);
+        _p.r(76);
         module.exports = kityminder;
     }
 };
@@ -4472,7 +4474,7 @@ _p[43] = {
         var MinderNode = _p.r(21);
         var Command = _p.r(9);
         var Module = _p.r(20);
-        var TextRenderer = _p.r(60);
+        var TextRenderer = _p.r(62);
         Module.register("basestylemodule", function() {
             var km = this;
             function getNodeDataOrStyle(node, name) {
@@ -5231,8 +5233,9 @@ _p[46] = {
                 create: function(node) {
                     if (node.isRoot()) return;
                     this.expander = new Expander(node);
-                    node.getRenderContainer().prependShape(this.expander);
-                    node.expanderRenderer = this;
+                    this.bringToBack = true;
+                    // node.getRenderContainer().prependShape(this.expander);
+                    // node.expanderRenderer = this;
                     this.node = node;
                     return this.expander;
                 },
@@ -5346,7 +5349,7 @@ _p[47] = {
         var MinderNode = _p.r(21);
         var Command = _p.r(9);
         var Module = _p.r(20);
-        var TextRenderer = _p.r(60);
+        var TextRenderer = _p.r(62);
         function getNodeDataOrStyle(node, name) {
             return node.getData(name) || node.getStyle(name);
         }
@@ -5940,8 +5943,74 @@ _p[51] = {
     }
 };
 
-//src/module/node.js
+//src/module/newflag.js
+/**
+ * @author: robeenlee.lsp
+ */
 _p[52] = {
+    value: function(require, exports, module) {
+        var kity = _p.r(17);
+        var Command = _p.r(9);
+        var Module = _p.r(20);
+        var Renderer = _p.r(27);
+        Module.register("NewFlagModule", function() {
+            var FLAG_PATH = "M0,0h42v17.9L12.8,18C9.1,14.9,7.2,11.6,7,8.1C6.1,4.4,3.7,1.7,0,0z";
+            var NewFlagCommand = kity.createClass("NewFlagCommand", {
+                base: Command,
+                execute: function(minder) {
+                    var node = minder.getSelectedNode();
+                    var markers = node.getData("markers") || [];
+                    if (markers.indexOf("new") === -1) {
+                        markers.push("new");
+                    }
+                    node.setData("markers", markers);
+                    node.render();
+                    node.getMinder().layout(300);
+                },
+                queryState: function(minder) {
+                    return minder.getSelectedNodes().length === 1 ? 0 : -1;
+                }
+            });
+            var NewFlagIcon = kity.createClass("NewFlagIcon", {
+                base: kity.Group,
+                constructor: function() {
+                    this.callBase();
+                    this.path = new kity.Path().setPathData(FLAG_PATH).fill(kity.Color.createHSLA(27, 95, 55, .9));
+                    this.text = new kity.Text("最新").fill("white").setSize(12).setTranslate(12, 12);
+                    this.addShapes([ this.path, this.text ]);
+                    this.setStyle("cursor", "pointer");
+                }
+            });
+            var NewFlagRenderer = kity.createClass("NewFlagRenderer", {
+                base: Renderer,
+                create: function(node) {
+                    return new NewFlagIcon();
+                },
+                shouldRender: function(node) {
+                    var markers = node.getData("markers") || [];
+                    return markers.indexOf("new") !== -1;
+                },
+                update: function(icon, node, box) {
+                    var iconBox = icon.getBoundaryBox();
+                    var x = box.right - iconBox.width;
+                    var y = box.top;
+                    icon.setTranslate(x, y);
+                }
+            });
+            return {
+                renderers: {
+                    afteroutline: NewFlagRenderer
+                },
+                commands: {
+                    newFlag: NewFlagCommand
+                }
+            };
+        });
+    }
+};
+
+//src/module/node.js
+_p[53] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6091,7 +6160,7 @@ _p[52] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[53] = {
+_p[54] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6189,7 +6258,7 @@ _p[53] = {
 };
 
 //src/module/outline.js
-_p[54] = {
+_p[55] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6305,8 +6374,82 @@ _p[54] = {
     }
 };
 
+//src/module/policeflag.js
+/**
+ * @author: robeenlee.lsp
+ */
+_p[56] = {
+    value: function(require, exports, module) {
+        var kity = _p.r(17);
+        var Command = _p.r(9);
+        var Module = _p.r(20);
+        var Renderer = _p.r(27);
+        Module.register("PoliceFlagModule", function() {
+            var FLAG_PATH = "M7.9,15.7c-0.5,0-1.6-0.2-2.6-0.8c-0.8-0.4-1.9-1.2-2.4-2.5l0,0l-0.1,0c-0.5-0.1-1-0.4-1.4-0.8c-0.3-0.3-0.7-0.7-0.7-1.3c0-0.9,0.5-1.6,1.2-1.9l0.1,0V8.2C2.2,8.1,2.3,8,2.4,8l0,0v0c0-0.2,0-0.3,0.1-0.5l0,0V7.2l0,0c0,0-0.1-0.1-0.1-0.1c0.4-0.1,2.2-0.7,5.6-0.7c3.3,0,5.2,0.5,5.6,0.7c0,0-0.1,0.1-0.1,0.1l-0.2,0.2h0.2c0,0,0,0.1,0,0.2c0,0.1,0.1,0.2,0.1,0.3v0l0,0C13.7,8,13.7,8,13.7,8.1v0.2l0.1,0c0.8,0.3,1.2,1,1.1,2l0,0v0c0,0.4-0.2,0.9-0.7,1.3c-0.4,0.4-0.9,0.7-1.4,0.8l-0.1,0l0,0c-0.5,1.3-1.5,2-2.4,2.5C9.5,15.4,8.5,15.7,7.9,15.7C7.9,15.7,7.9,15.7,7.9,15.7z M4,11.8c0.5,2,3.2,2.8,4,2.8c0.4,0,1.3-0.2,2.1-0.7c0.7-0.4,1.6-1.1,1.9-2.2l0,0v0c0-0.2,0.2-0.3,0.5-0.3c0.3,0,0.8-0.3,1.1-0.7c0.1-0.2,0.2-0.4,0.1-0.6c0-0.3-0.1-0.5-0.2-0.6l-0.1-0.1l-0.1,0.1c-0.1,0.1-0.2,0.1-0.4,0.1c-0.3,0-0.5-0.2-0.5-0.4V8.8c0-0.2,0-0.5-0.1-0.7l0-0.1L12.3,8c-0.9,0.5-2.6,1.1-4.4,1.1C6.1,9.1,4.4,8.4,3.5,8L3.4,7.9v0.2c0,0.1,0,0.2,0,0.3c0,0.1-0.1,0.3-0.1,0.4v0.5c0,0.2-0.2,0.4-0.5,0.4c-0.1,0-0.3-0.1-0.4-0.1L2.3,9.4L2.3,9.6c-0.1,0.2-0.2,0.4-0.2,0.7c0,0.3,0.4,0.7,0.6,0.8c0.3,0.2,0.6,0.4,0.8,0.4C3.7,11.5,3.9,11.6,4,11.8C4,11.8,4,11.8,4,11.8z M1.7,5.9C1.6,5.4,1.2,4.8,0.8,4.3C0.6,4,0.5,3.8,0.4,3.6C0.2,3.4,0.3,3.3,0.3,3.3c0,0,0,0,0.1,0c3.5,0,5-1.2,6-2.1C7,0.7,7.4,0.4,8,0.4c0.6,0,1.1,0.4,1.8,0.9c1.1,0.9,2.7,2,5.8,2c0.1,0,0.1,0,0.1,0c0,0,0,0.1-0.2,0.3c-0.1,0.1-0.3,0.3-0.5,0.5c-0.6,0.6-1.3,1.3-1.3,1.8c-0.2-0.1-0.6-0.2-1.3-0.3c-0.9-0.1-2.3-0.3-4.4-0.3C4.6,5.4,2.2,5.8,1.7,5.9C1.7,5.9,1.7,5.9,1.7,5.9z M6.4,3.7c0,0.3,0.3,0.6,0.8,0.9C7.6,4.9,8,5,8,5l0,0l0,0c0,0,0.4-0.2,0.8-0.4C9.3,4.3,9.6,4,9.6,3.7V3.6H9.5V2.4H6.4L6.4,3.7L6.4,3.7z";
+            var PoliceFlagCommand = kity.createClass("PoliceFlagCommand", {
+                base: Command,
+                execute: function(minder) {
+                    var node = minder.getSelectedNode();
+                    var markers = node.getData("markers") || [];
+                    if (markers.indexOf("police") === -1) {
+                        markers.push("police");
+                    }
+                    node.setData("markers", markers);
+                    node.render();
+                    node.getMinder().layout(300);
+                },
+                queryState: function(minder) {
+                    return minder.getSelectedNodes().length === 1 ? 0 : -1;
+                }
+            });
+            var PoliceFlagIcon = kity.createClass("PoliceFlagIcon", {
+                base: kity.Group,
+                constructor: function() {
+                    this.callBase();
+                    this.path = new kity.Path().setPathData(FLAG_PATH).fill("white");
+                    this.width = 20;
+                    this.height = 20;
+                    this.addShapes([ this.path ]);
+                    this.setStyle("cursor", "pointer");
+                }
+            });
+            var PoliceFlagRenderer = kity.createClass("PoliceFlagRenderer", {
+                base: Renderer,
+                create: function(node) {
+                    return new PoliceFlagIcon();
+                },
+                shouldRender: function(node) {
+                    var markers = node.getData("markers") || [];
+                    return markers.indexOf("police") !== -1;
+                },
+                update: function(icon, node, box) {
+                    var spaceLeft = node.getStyle("space-left");
+                    var iconBox = icon.getBoundaryBox();
+                    var x = box.left - iconBox.width - spaceLeft;
+                    var y = -icon.height / 2;
+                    icon.setTranslate(x, y);
+                    return new kity.Box({
+                        x: x,
+                        y: y,
+                        width: icon.width,
+                        height: icon.height
+                    });
+                }
+            });
+            return {
+                renderers: {
+                    left: PoliceFlagRenderer
+                },
+                commands: {
+                    policeFlag: PoliceFlagCommand
+                }
+            };
+        });
+    }
+};
+
 //src/module/priority.js
-_p[55] = {
+_p[57] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6432,7 +6575,7 @@ _p[55] = {
 };
 
 //src/module/progress.js
-_p[56] = {
+_p[58] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6557,7 +6700,7 @@ _p[56] = {
 };
 
 //src/module/resource.js
-_p[57] = {
+_p[59] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -6905,7 +7048,7 @@ _p[57] = {
 };
 
 //src/module/select.js
-_p[58] = {
+_p[60] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7050,7 +7193,7 @@ _p[58] = {
 };
 
 //src/module/style.js
-_p[59] = {
+_p[61] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7155,7 +7298,7 @@ _p[59] = {
 };
 
 //src/module/text.js
-_p[60] = {
+_p[62] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7409,7 +7552,7 @@ _p[60] = {
 };
 
 //src/module/undertext.js
-_p[61] = {
+_p[63] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7663,7 +7806,7 @@ _p[61] = {
 };
 
 //src/module/view.js
-_p[62] = {
+_p[64] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7985,7 +8128,7 @@ _p[62] = {
 };
 
 //src/module/zoom.js
-_p[63] = {
+_p[65] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -8167,7 +8310,7 @@ _p[63] = {
 };
 
 //src/protocol/json.js
-_p[64] = {
+_p[66] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         data.registerProtocol("json", module.exports = {
@@ -8186,7 +8329,7 @@ _p[64] = {
 };
 
 //src/protocol/markdown.js
-_p[65] = {
+_p[67] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var LINE_ENDING_SPLITER = /\r\n|\r|\n/;
@@ -8317,7 +8460,7 @@ _p[65] = {
 };
 
 //src/protocol/png.js
-_p[66] = {
+_p[68] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var data = _p.r(12);
@@ -8538,7 +8681,7 @@ _p[66] = {
 };
 
 //src/protocol/svg.js
-_p[67] = {
+_p[69] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         /**
@@ -8810,7 +8953,7 @@ _p[67] = {
 };
 
 //src/protocol/text.js
-_p[68] = {
+_p[70] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var Browser = _p.r(17).Browser;
@@ -9041,7 +9184,7 @@ _p[68] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[69] = {
+_p[71] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("default", {
@@ -9075,7 +9218,7 @@ _p[69] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[70] = {
+_p[72] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("filetree", {
@@ -9103,7 +9246,7 @@ _p[70] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[71] = {
+_p[73] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("fish-bone", {
@@ -9145,7 +9288,7 @@ _p[71] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[72] = {
+_p[74] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("right", {
@@ -9169,7 +9312,7 @@ _p[72] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[73] = {
+_p[75] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("structure", {
@@ -9192,7 +9335,7 @@ _p[73] = {
  * @author: along
  * @copyright: bpd729@163.com, 2015
  */
-_p[74] = {
+_p[76] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("tianpan", {
@@ -9213,7 +9356,7 @@ _p[74] = {
 };
 
 //src/theme/default.js
-_p[75] = {
+_p[77] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "classic", "classic-compact" ].forEach(function(name) {
@@ -9274,7 +9417,7 @@ _p[75] = {
 };
 
 //src/theme/fish.js
-_p[76] = {
+_p[78] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("fish", {
@@ -9325,7 +9468,7 @@ _p[76] = {
 };
 
 //src/theme/fresh.js
-_p[77] = {
+_p[79] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var theme = _p.r(32);
@@ -9394,7 +9537,7 @@ _p[77] = {
 };
 
 //src/theme/snow.js
-_p[78] = {
+_p[80] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "snow", "snow-compact" ].forEach(function(name) {
@@ -9449,7 +9592,7 @@ _p[78] = {
 };
 
 //src/theme/tianpan.js
-_p[79] = {
+_p[81] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "tianpan", "tianpan-compact" ].forEach(function(name) {
@@ -9511,7 +9654,7 @@ _p[79] = {
 };
 
 //src/theme/wire.js
-_p[80] = {
+_p[82] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("wire", {

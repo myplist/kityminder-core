@@ -143,7 +143,6 @@ define(function(require, exports, module) {
             var textArr = nodeText ? nodeText.split('\n') : [' '];
 
             var lineHeight = node.getStyle('line-height');
-
             var fontSize = getDataOrStyle('font-size');
             var fontFamily = getDataOrStyle('font-family') || 'default';
 

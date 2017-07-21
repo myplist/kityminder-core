@@ -179,8 +179,9 @@ define(function(require, exports, module) {
             create: function(node) {
                 if (node.isRoot()) return;
                 this.expander = new Expander(node);
-                node.getRenderContainer().prependShape(this.expander);
-                node.expanderRenderer = this;
+                this.bringToBack = true;
+                // node.getRenderContainer().prependShape(this.expander);
+                // node.expanderRenderer = this;
                 this.node = node;
                 return this.expander;
             },
