@@ -36,10 +36,13 @@ define(function(require, exports, module) {
 
             constructor: function() {
                 this.callBase();
-                this.path = new kity.Path().setPathData(FLAG_PATH).fill('white');
                 this.width = 20;
                 this.height = 20;
-                this.addShapes([this.path]);
+                // 添加police marker
+                this.addShape(new kity.Path().pipe(function() {
+                    this.setPathData(FLAG_PATH);
+                    this.fill('white');
+                }));
 
                 this.setStyle('cursor', 'pointer');
             }

@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-07-21
+ * kityminder - v1.4.43 - 2017-07-24
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -6406,10 +6406,13 @@ _p[56] = {
                 base: kity.Group,
                 constructor: function() {
                     this.callBase();
-                    this.path = new kity.Path().setPathData(FLAG_PATH).fill("white");
                     this.width = 20;
                     this.height = 20;
-                    this.addShapes([ this.path ]);
+                    // 添加police marker
+                    this.addShape(new kity.Path().pipe(function() {
+                        this.setPathData(FLAG_PATH);
+                        this.fill("white");
+                    }));
                     this.setStyle("cursor", "pointer");
                 }
             });
@@ -7561,128 +7564,10 @@ _p[63] = {
         var Command = _p.r(9);
         var Module = _p.r(20);
         var Renderer = _p.r(27);
-        /**
-     * 针对不同系统、不同浏览器、不同字体做居中兼容性处理
-     * 暂时未增加Linux的处理
-     */
-        var FONT_ADJUST = {
-            safari: {
-                "微软雅黑,Microsoft YaHei": -.17,
-                "楷体,楷体_GB2312,SimKai": -.1,
-                "隶书, SimLi": -.1,
-                "comic sans ms": -.23,
-                "impact,chicago": -.15,
-                "times new roman": -.1,
-                "arial black,avant garde": -.17,
-                "default": 0
-            },
-            ie: {
-                10: {
-                    "微软雅黑,Microsoft YaHei": -.17,
-                    "comic sans ms": -.17,
-                    "impact,chicago": -.08,
-                    "times new roman": .04,
-                    "arial black,avant garde": -.17,
-                    "default": -.15
-                },
-                11: {
-                    "微软雅黑,Microsoft YaHei": -.17,
-                    "arial,helvetica,sans-serif": -.17,
-                    "comic sans ms": -.17,
-                    "impact,chicago": -.08,
-                    "times new roman": .04,
-                    "sans-serif": -.16,
-                    "arial black,avant garde": -.17,
-                    "default": -.15
-                }
-            },
-            edge: {
-                "微软雅黑,Microsoft YaHei": -.15,
-                "arial,helvetica,sans-serif": -.17,
-                "comic sans ms": -.17,
-                "impact,chicago": -.08,
-                "sans-serif": -.16,
-                "arial black,avant garde": -.17,
-                "default": -.15
-            },
-            sg: {
-                "微软雅黑,Microsoft YaHei": -.15,
-                "arial,helvetica,sans-serif": -.05,
-                "comic sans ms": -.22,
-                "impact,chicago": -.16,
-                "times new roman": -.03,
-                "arial black,avant garde": -.22,
-                "default": -.15
-            },
-            chrome: {
-                Mac: {
-                    "andale mono": -.05,
-                    "comic sans ms": -.3,
-                    "impact,chicago": -.13,
-                    "times new roman": -.1,
-                    "arial black,avant garde": -.17,
-                    "default": 0
-                },
-                Win: {
-                    "微软雅黑,Microsoft YaHei": -.15,
-                    "arial,helvetica,sans-serif": -.02,
-                    "arial black,avant garde": -.2,
-                    "comic sans ms": -.2,
-                    "impact,chicago": -.12,
-                    "times new roman": -.02,
-                    "default": -.15
-                },
-                Lux: {
-                    "andale mono": -.05,
-                    "comic sans ms": -.3,
-                    "impact,chicago": -.13,
-                    "times new roman": -.1,
-                    "arial black,avant garde": -.17,
-                    "default": 0
-                }
-            },
-            firefox: {
-                Mac: {
-                    "微软雅黑,Microsoft YaHei": -.2,
-                    "宋体,SimSun": .05,
-                    "comic sans ms": -.2,
-                    "impact,chicago": -.15,
-                    "arial black,avant garde": -.17,
-                    "times new roman": -.1,
-                    "default": .05
-                },
-                Win: {
-                    "微软雅黑,Microsoft YaHei": -.16,
-                    "andale mono": -.17,
-                    "arial,helvetica,sans-serif": -.17,
-                    "comic sans ms": -.22,
-                    "impact,chicago": -.23,
-                    "times new roman": -.22,
-                    "sans-serif": -.22,
-                    "arial black,avant garde": -.17,
-                    "default": -.16
-                },
-                Lux: {
-                    "宋体,SimSun": -.2,
-                    "微软雅黑,Microsoft YaHei": -.2,
-                    "黑体, SimHei": -.2,
-                    "隶书, SimLi": -.2,
-                    "楷体,楷体_GB2312,SimKai": -.2,
-                    "andale mono": -.2,
-                    "arial,helvetica,sans-serif": -.2,
-                    "comic sans ms": -.2,
-                    "impact,chicago": -.2,
-                    "times new roman": -.2,
-                    "sans-serif": -.2,
-                    "arial black,avant garde": -.2,
-                    "default": -.16
-                }
-            }
-        };
         var UnderTextRenderer = kity.createClass("UnderTextRenderer", {
             base: Renderer,
             create: function(node) {
-                var group = new kity.Group().setId(utils.uuid("node_text"));
+                var group = new kity.Group().setId(utils.uuid("node_undertext"));
                 group.on("mouseover", function(e) {
                     node.getMinder().fire("showmemodetail", {
                         node: node
@@ -7705,74 +7590,20 @@ _p[63] = {
                 if (!nodeText) {
                     return;
                 }
-                var textArr = nodeText ? nodeText.split("\n") : [ " " ];
                 // 样式设置
-                var lineHeight = node.getStyle("line-height");
-                var fontFamily = getDataOrStyle("font-family") || "default";
-                var fontSize = 8;
-                var height = lineHeight * fontSize * textArr.length - (lineHeight - 1) * fontSize;
-                var yStart = -height / 2;
-                var Browser = kity.Browser;
-                var adjust;
-                if (Browser.chrome || Browser.opera || Browser.bd || Browser.lb === "chrome") {
-                    adjust = FONT_ADJUST["chrome"][Browser.platform][fontFamily];
-                } else if (Browser.gecko) {
-                    adjust = FONT_ADJUST["firefox"][Browser.platform][fontFamily];
-                } else if (Browser.sg) {
-                    adjust = FONT_ADJUST["sg"][fontFamily];
-                } else if (Browser.safari) {
-                    adjust = FONT_ADJUST["safari"][fontFamily];
-                } else if (Browser.ie) {
-                    adjust = FONT_ADJUST["ie"][Browser.version][fontFamily];
-                } else if (Browser.edge) {
-                    adjust = FONT_ADJUST["edge"][fontFamily];
-                } else if (Browser.lb) {
-                    // 猎豹浏览器的ie内核兼容性模式下
-                    adjust = .9;
-                }
+                var fontSize = 10;
                 var paddingLeft = node.getStyle("padding-left");
-                textGroup.setTranslate(paddingLeft, (adjust || 0) * fontSize);
-                var textLength = textArr.length;
-                var textGroupLength = textGroup.getItems().length;
-                var i, ci, textShape, text;
-                if (textLength < textGroupLength) {
-                    for (i = textLength, ci; ci = textGroup.getItem(i); ) {
-                        textGroup.removeItem(i);
-                    }
-                } else if (textLength > textGroupLength) {
-                    var growth = textLength - textGroupLength;
-                    while (growth--) {
-                        textShape = new kity.Text().setAttr("text-rendering", "inherit");
-                        if (kity.Browser.ie || kity.Browser.edge) {
-                            textShape.setVerticalAlign("top");
-                        } else {
-                            textShape.setAttr("dominant-baseline", "text-before-edge");
-                        }
-                        textGroup.addItem(textShape);
-                    }
-                }
-                for (i = 0, text, textShape; text = textArr[i], textShape = textGroup.getItem(i); i++) {
-                    textShape.setContent(text);
-                    if (kity.Browser.ie || kity.Browser.edge) {
-                        textShape.fixPosition();
-                    }
-                }
-                return function() {
-                    var rBox = new kity.Box(), r = Math.round, arrowSpace = 12;
-                    textGroup.eachItem(function(i, textShape) {
-                        var y = yStart + i * fontSize * lineHeight;
-                        textShape.setY(box.height / 2 + 2);
-                        textShape.setX(box.left + arrowSpace);
-                        // textShape.fill(kity.Color.createHSLA(360, 8, 80, 0.6));
-                        textShape.fill("grey");
-                        textShape.setSize(fontSize);
-                        var bbox = textShape.getBoundaryBox();
-                        rBox = rBox.merge(new kity.Box(0, y + box.height, bbox.height && bbox.width || 1, fontSize));
-                    });
-                    var path = "M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z";
-                    var arrow = new kity.Path().setTranslate(box.left, box.height / 2).setPathData(path).fill("grey");
-                    textGroup.addShapes([ arrow ]);
-                }();
+                var arrowSpace = 12;
+                textGroup.setTranslate(paddingLeft, 0);
+                var textShape = new kity.Text(nodeText).pipe(function() {
+                    this.setY(box.bottom + fontSize);
+                    this.setX(box.left + arrowSpace);
+                    this.fill("grey");
+                    this.setSize(fontSize);
+                });
+                var path = "M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z";
+                var arrow = new kity.Path().setTranslate(box.left, box.height / 2).setPathData(path).fill("grey");
+                textGroup.addShapes([ arrow, textShape ]);
             }
         });
         var UnderTextCommand = kity.createClass({
@@ -9376,7 +9207,7 @@ _p[77] = {
                 "main-color": "white",
                 "main-background": "transparent",
                 "main-stroke": "none",
-                "main-font-size": 12,
+                "main-font-size": 14,
                 "main-padding": compact ? [ 5, 10 ] : [ 6, 20 ],
                 "main-margin": compact ? [ 8, 10 ] : 15,
                 "main-radius": 5,
@@ -9386,7 +9217,7 @@ _p[77] = {
                 "sub-background": "transparent",
                 // 'sub-background': '#55A7FA',
                 "sub-stroke": "none",
-                "sub-font-size": 12,
+                "sub-font-size": 14,
                 "sub-padding": [ 5, 10 ],
                 "sub-margin": compact ? [ 8, 10 ] : 15,
                 "sub-tree-margin": 30,
