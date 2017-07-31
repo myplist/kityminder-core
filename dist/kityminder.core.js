@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-07-24
+ * kityminder - v1.4.43 - 2017-07-31
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -3062,6 +3062,7 @@ _p[27] = {
                                 // 更新渲染图形
                                 lastBoxes[j] = renderer.update(renderer.getRenderShape(), node, node._contentBox);
                             } else if (renderer.getRenderShape()) {
+                                // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
                                 renderer.getRenderShape().setVisible(false);
                                 lastBoxes[j] = null;
                             }
@@ -7589,6 +7590,11 @@ _p[63] = {
                 var nodeText = node.getData("memo");
                 if (!nodeText) {
                     return;
+                }
+                // 清除
+                var textGroupLength = textGroup.getItems().length;
+                while (textGroupLength > 0) {
+                    textGroup.removeItem(--textGroupLength);
                 }
                 // 样式设置
                 var fontSize = 10;

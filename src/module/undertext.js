@@ -37,6 +37,11 @@ define(function(require, exports, module) {
             if ( !nodeText ) {
                 return;
             }
+            // 清除
+            var textGroupLength = textGroup.getItems().length;
+            while ( textGroupLength > 0 ) {
+                textGroup.removeItem(--textGroupLength);
+            }
             // 样式设置
             var fontSize = 10;
             var paddingLeft = node.getStyle('padding-left');

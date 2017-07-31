@@ -144,10 +144,8 @@ define(function(require, exports, module) {
 
                             // 更新渲染图形
                             lastBoxes[j] = renderer.update(renderer.getRenderShape(), node, node._contentBox);
-                        }
-
-                        // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
-                        else if (renderer.getRenderShape()) {
+                        } else if (renderer.getRenderShape()) {
+                            // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
                             renderer.getRenderShape().setVisible(false);
                             lastBoxes[j] = null;
                         }
