@@ -67,7 +67,7 @@ define(function(require, exports, module) {
             this._connectContainer.addShape(connection);
             this.updateConnect(node);
         },
-        // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘制
+        // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
         createNetConnect: function(fromNode, toNode, relationship) {
             var group = new kity.Group();
             this._connectContainer.addShape(group);
@@ -146,7 +146,7 @@ define(function(require, exports, module) {
                     };
                 }
 
-                let points = calcPoints(node, parent);
+                var points = calcPoints(node, parent);
                 start = new kity.Point(points.start.x, points.start.y);
                 end = new kity.Point(points.end.x, points.end.y);
 
