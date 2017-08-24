@@ -67,17 +67,54 @@ define(function(require, exports, module) {
             this._connectContainer.addShape(connection);
             this.updateConnect(node);
         },
+        /**
+         * [addRelationship 一对结点只能添加一条关联线]
+         * @param {[type]} fromId [description]
+         * @param {[type]} toId   [description]
+         * @param {[type]} desc   [description]
+         */
+        addRelationship: function(fromId, toId, desc) {
+            this._relationships = this._relationships || [];
+            var relationship = this._relationships.find(function(r) {
+                return fromId === r.fromId && toId === r.toId;
+            });
+            if ( !relationship ) {
+                var newRelationship = {
+                    fromId: fromId,
+                    toId: toId,
+                    desc: desc
+                };
+                this._relationships.push(newRelationship);
+                newRelationship.connection = this.createRelationship(fromId, toId, desc);
+            }
+        },
         // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
-        createNetConnect: function(fromNode, toNode, relationship) {
+        createRelationship: function(fromNodeId, toNodeId, desc) {
+            var fromNode = this.getNodeById(fromNodeId);
+            var toNode = this.getNodeById(toNodeId);
+            if ( !fromNode || !toNode ) {
+                // 删除关系
+                var relationships = this._relationships || [];
+                var relationship = relationships.find(function(r) {
+                    return fromNodeId === r.fromId && toNodeId === r.toId;
+                });
+                if ( relationship ) {
+                    var index = relationships.indexOf(relationship);
+                    relationships.splice(index, 1);
+                }
+                return;
+            }
+            // 不绘制的情况
+            if ( !fromNode.isExpanded() || !toNode.isExpanded() || !fromNode.attached || !toNode.attached) {
+                return;
+            }
+
             var group = new kity.Group();
             this._connectContainer.addShape(group);
             // 创建线索
             var connection = new kity.Path();
             group.addShape(connection);
             connection.setVisible(true);
-
-            var strokeColor = fromNode.getStyle('connect-color') || 'white',
-                strokeWidth = fromNode.getStyle('connect-width') || 2;
 
             // 设置线条样式
             connection.stroke(new kity.Pen().pipe(function() {
@@ -130,12 +167,14 @@ define(function(require, exports, module) {
                     // 寻找最近的粘附点
                     // 暴力解法：可优化但不必要，因为点集不会很大
                     for( i = 0; i < startEnds.length; i++) {
-                        for( j = 0; j < endEnds.length; j++) {
-                            distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * 0.5; //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
-                            if(distance < minDistance) {
-                                minDistance = distance;
-                                nearStart = startEnds[i];
-                                nearEnd = endEnds[j];
+                        if ( startEnds[i].type !== 'left' && startEnds[i].type !== 'right' ) {
+                            for( j = 0; j < endEnds.length; j++) {
+                                distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * 0.5; //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
+                                if(distance < minDistance) {
+                                    minDistance = distance;
+                                    nearStart = startEnds[i];
+                                    nearEnd = endEnds[j];
+                                }
                             }
                         }
                     }
@@ -156,12 +195,12 @@ define(function(require, exports, module) {
 
                 connection.setPathData(pathData);
             }
-            provider(fromNode, toNode, connection, strokeWidth, strokeColor);
+            provider(fromNode, toNode, connection);
 
-            if ( relationship ) {
-                var declare = new kity.Text(relationship).pipe(function() {
+            if ( desc ) {
+                var declare = new kity.Text(desc).pipe(function() {
                     this.setSize(10);
-                    this.fill(kity.Color.createHSLA(27, 95, 55, 0.9));
+                    this.fill(fromNode.getStyle('color'));
                     this.setX(36);
                 });
                 declare.setPath(connection);
@@ -213,7 +252,21 @@ define(function(require, exports, module) {
             } else {
                 connection.setTranslate(0, 0);
             }
-        }
+        },
+        updateRelationship: function(node) {
+            var relationships = this._relationships || [];
+            var _self = this;
+            relationships.forEach(function(relationship) {
+                var nodeId = node.getData('id');
+                if ( nodeId === relationship.fromId || nodeId === relationship.toId ) {
+                    if ( relationship.connection ) {
+                        relationship.connection.remove();
+                        relationship.connection = null;
+                    }
+                    relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc);
+                }
+            })
+        },
     });
 
     Module.register('Connect', {
@@ -227,10 +280,12 @@ define(function(require, exports, module) {
             },
             'nodedetach': function(e) {
                 this.removeConnect(e.node);
+                this.updateRelationship(e.node);
             },
             'layoutapply layoutfinish noderender': function(e) {
                 this.updateConnect(e.node);
-            }
+                this.updateRelationship(e.node);
+            },
         }
     });
 

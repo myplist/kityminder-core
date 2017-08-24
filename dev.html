@@ -35,24 +35,25 @@
                 "resource": ["hello", "hello", "hello"], "note": "哥","markers": ["new","police"], "hyperlink": "hell", "priority":"1"
             },
             "children": [{
-                "data": {"text": "hello"}, 
+                "data": {"text": "hello", "id": "3"}, 
                 "children": []
             }, {
                 "data": {"text": "hello","resource": ["world"], "note": "哥", "memo": "为了世界和平", "markers": ["new", "police"]}, 
                 "children": [{
-                    "data": {"text": "world", "memo": "2017-07-06 00:00:00", "resource": ["world"],"markers": ["new", "police"], "priority": "1"}, 
+                    "data": {"text": "world", "memo": "2017-07-06 00:00:00", "resource": ["world"],"markers": ["new", "police"], "priority": "1", "id": "1"}, 
                     "children": []
                 }, {
                     "data": {"text": "world", "progress": "5", "memo": "详情你好详情你好"}, 
                     "children": []
                 }, {
-                    "data": {"text": "world", "resource":["hello", "hello", "hello"],"markers": ["new"]}, 
+                    "data": {"text": "world", "resource":["hello", "hello", "hello"],"markers": ["new"], "id":"2"}, 
                     "children": []
                 }]
             }]
         }, 
         "theme": "classic-compact", 
-        "template": "right"
+        "template": "right",
+        "relationships": [{"fromId": "1", "toId": "3", "desc": "你好，世界"}]
     }
     </script>
 </body>
