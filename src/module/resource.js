@@ -297,6 +297,13 @@ define(function(require, exports, module) {
                             node.getMinder().fire('showtagrequest', 
                                 {node: node, tag: this.getText()});
                         });
+                        overlay.on('mouseover', function() {
+                            node.getMinder().fire('showtagtooltip', 
+                                {node: node, tag: this.getText()});
+                        }).on('mouseout', function() {
+                            node.getMinder().fire('hidetagtooltip', 
+                                {node: node, tag: this.getText()});
+                        });
                         overlays.push(overlay);
                         container.addShape(overlay);
                     }
