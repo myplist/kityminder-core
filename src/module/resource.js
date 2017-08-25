@@ -293,16 +293,16 @@ define(function(require, exports, module) {
                     if (!overlay) {
                         overlay = new ResourceOverlay();
                         // 绑定事件
-                        overlay.on('click', function() {
+                        overlay.on('click', function(event) {
                             node.getMinder().fire('showtagrequest', 
-                                {node: node, tag: this.getText()});
+                                {node: node, tag: this.getText(), originEvent: event.originEvent});
                         });
-                        overlay.on('mouseover', function() {
+                        overlay.on('mouseover', function(event) {
                             node.getMinder().fire('showtagtooltip', 
-                                {node: node, tag: this.getText()});
-                        }).on('mouseout', function() {
+                                {node: node, tag: this.getText(), originEvent: event.originEvent});
+                        }).on('mouseout', function(event) {
                             node.getMinder().fire('hidetagtooltip', 
-                                {node: node, tag: this.getText()});
+                                {node: node, tag: this.getText(), originEvent: event.originEvent});
                         });
                         overlays.push(overlay);
                         container.addShape(overlay);

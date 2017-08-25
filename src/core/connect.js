@@ -163,10 +163,11 @@ define(function(require, exports, module) {
                     this.setWidth(2);
                     this.setDashArray([10, 5]);
                 }));
-            }).on('click', function() {
+            }).on('click', function(event) {
                 fromNode.getMinder().fire('relationship', {
                     fromId: fromNodeId,
-                    toId: toNodeId
+                    toId: toNodeId,
+                    originEvent: event.originEvent
                 });
             });
 

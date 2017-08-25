@@ -780,10 +780,11 @@ _p[11] = {
                         this.setWidth(2);
                         this.setDashArray([ 10, 5 ]);
                     }));
-                }).on("click", function() {
+                }).on("click", function(event) {
                     fromNode.getMinder().fire("relationship", {
                         fromId: fromNodeId,
-                        toId: toNodeId
+                        toId: toNodeId,
+                        originEvent: event.originEvent
                     });
                 });
                 // 线条绘制
@@ -7198,21 +7199,24 @@ _p[59] = {
                         if (!overlay) {
                             overlay = new ResourceOverlay();
                             // 绑定事件
-                            overlay.on("click", function() {
+                            overlay.on("click", function(event) {
                                 node.getMinder().fire("showtagrequest", {
                                     node: node,
-                                    tag: this.getText()
+                                    tag: this.getText(),
+                                    originEvent: event.originEvent
                                 });
                             });
-                            overlay.on("mouseover", function() {
+                            overlay.on("mouseover", function(event) {
                                 node.getMinder().fire("showtagtooltip", {
                                     node: node,
-                                    tag: this.getText()
+                                    tag: this.getText(),
+                                    originEvent: event.originEvent
                                 });
-                            }).on("mouseout", function() {
+                            }).on("mouseout", function(event) {
                                 node.getMinder().fire("hidetagtooltip", {
                                     node: node,
-                                    tag: this.getText()
+                                    tag: this.getText(),
+                                    originEvent: event.originEvent
                                 });
                             });
                             overlays.push(overlay);
