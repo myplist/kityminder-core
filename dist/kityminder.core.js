@@ -736,7 +736,7 @@ _p[11] = {
                     return;
                 }
                 // 不绘制的情况
-                if (!fromNode.isExpanded() || !toNode.isExpanded() || !fromNode.attached || !toNode.attached) {
+                if (fromNode.getParent() && fromNode.getParent().isCollapsed() || toNode.getParent() && toNode.getParent().isCollapsed() || !fromNode.attached || !toNode.attached) {
                     return;
                 }
                 var group = new kity.Group();
