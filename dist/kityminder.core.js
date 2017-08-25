@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-08-24
+ * kityminder - v1.4.43 - 2017-08-25
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -740,29 +740,51 @@ _p[11] = {
                     return;
                 }
                 var group = new kity.Group();
+                var color = kity.Color.createHSLA(27, 95, 55, .9);
                 this._connectContainer.addShape(group);
                 // 创建线索
                 var connection = new kity.Path();
                 group.addShape(connection);
                 connection.setVisible(true);
                 // 设置线条样式
+                var vconnectMarker = new kity.Marker().pipe(function() {
+                    var r = 16;
+                    var path = "M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z";
+                    var arrow = new kity.Path().setTranslate(8, -8).setPathData(path).fill(color);
+                    this.addShape(arrow);
+                    this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r * 2).setHeight(r);
+                });
+                var hconnectMarker = new kity.Marker().pipe(function() {
+                    var r = 12;
+                    var path = "M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z";
+                    var arrow = new kity.Path().setTranslate(14, -5).rotate(90).setPathData(path).fill(color);
+                    this.addShape(arrow);
+                    this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r).setHeight(r);
+                });
                 connection.stroke(new kity.Pen().pipe(function() {
-                    this.setColor(kity.Color.createHSLA(27, 95, 55, .9));
+                    this.setColor(color);
                     this.setWidth(2);
                     this.setDashArray([ 10, 5 ]);
                 }));
+                fromNode.getMinder().getPaper().addResource(vconnectMarker);
+                fromNode.getMinder().getPaper().addResource(hconnectMarker);
                 group.on("mouseover", function() {
                     connection.stroke(new kity.Pen().pipe(function() {
-                        this.setColor(kity.Color.createHSLA(27, 95, 55, .9));
+                        this.setColor(color);
                         this.setWidth(4);
                         this.setDashArray([ 10, 5 ]);
                     }));
                 }).on("mouseout", function() {
                     connection.stroke(new kity.Pen().pipe(function() {
-                        this.setColor(kity.Color.createHSLA(27, 95, 55, .9));
+                        this.setColor(color);
                         this.setWidth(2);
                         this.setDashArray([ 10, 5 ]);
                     }));
+                }).on("click", function() {
+                    fromNode.getMinder().fire("relationship", {
+                        fromId: fromNodeId,
+                        toId: toNodeId
+                    });
                 });
                 // 线条绘制
                 var provider = function(node, parent, connection) {
@@ -823,6 +845,11 @@ _p[11] = {
                     var points = calcPoints(node, parent);
                     start = new kity.Point(points.start.x, points.start.y);
                     end = new kity.Point(points.end.x, points.end.y);
+                    if (points.end.type === "right" || points.end.type === "left") {
+                        connection.setMarker(hconnectMarker);
+                    } else {
+                        connection.setMarker(vconnectMarker);
+                    }
                     vector = kity.Vector.fromPoints(start, end);
                     pathData.push("M", start);
                     pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
