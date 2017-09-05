@@ -9,7 +9,7 @@
     "url": "http://fex.baidu.com"
   },
   "scripts": {
-    "dev": "live-server --port=8888 --open=dev.html"
+    "dev": "live-server --port=8889 --open=dev.html"
   },
   "repository": {
     "type": "git",
