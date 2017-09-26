@@ -103,6 +103,10 @@ define(function(require, exports, module) {
             },
 
             shouldRender: function(node) {
+                var pNode = node.getParent();
+                if ( pNode && pNode.isCollapsed() ) {
+                    return false;
+                }
                 return node.getData('image');
             },
 

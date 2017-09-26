@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-09-05
+ * kityminder - v1.4.43 - 2017-09-26
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -5866,6 +5866,10 @@ _p[49] = {
                     return group;
                 },
                 shouldRender: function(node) {
+                    var pNode = node.getParent();
+                    if (pNode && pNode.isCollapsed()) {
+                        return false;
+                    }
                     return node.getData("image");
                 },
                 update: function(imageGroup, node, box) {
