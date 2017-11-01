@@ -11,7 +11,7 @@ define(function(require, exports, module) {
             'background': '#fbfbfb',
 
             'root-color': 'white',
-            'root-background': hsl(h, 37, 60),
+            'root-background': '#4178ff',
             'root-stroke': hsl(h, 37, 60),
             'root-font-size': 16,
             'root-padding': compat ? [6, 12] : [12, 24],
@@ -19,7 +19,7 @@ define(function(require, exports, module) {
             'root-radius': 5,
             'root-space': 10,
 
-            'main-color': 'black',
+            'main-color': 'white',
             'main-background': hsl(h, 33, 95),
             'main-stroke': hsl(h, 37, 60),
             'main-stroke-width': 1,
@@ -29,7 +29,7 @@ define(function(require, exports, module) {
             'main-radius': 3,
             'main-space': 5,
 
-            'sub-color': 'black',
+            'sub-color': 'white',
             'sub-background': 'transparent',
             'sub-stroke': 'none',
             'sub-font-size': 12,
