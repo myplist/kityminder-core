@@ -8,10 +8,10 @@ define(function(require, exports, module) {
 
     function generate(h, compat) {
         return {
-            'background': '#fbfbfb',
+            'background': '#3A4144',
 
             'root-color': 'white',
-            'root-background': '#4178ff',
+            'root-background': '#3FC3FC',
             'root-stroke': hsl(h, 37, 60),
             'root-font-size': 16,
             'root-padding': compat ? [6, 12] : [12, 24],
