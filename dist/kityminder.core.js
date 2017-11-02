@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-11-01
+ * kityminder - v1.4.43 - 2017-11-02
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -7108,7 +7108,7 @@ _p[59] = {
                         colorMapping[resource] = nextIndex;
                     }
                     // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                    return kity.Color.createHSLA(0, 0, 18, .5);
+                    return kity.Color.createHSLA(0, 0, 18, .3);
                 },
                 /**
              * 获得已使用的资源的列表
@@ -7218,8 +7218,8 @@ _p[59] = {
                         this.rect.fill("rgba(255, 255, 200, .8)");
                         this.text.fill(kity.Color.createHSLA(360, 100, 100, 1));
                     }).on("mouseout", function() {
-                        this.rect.fill(kity.Color.createHSLA(0, 0, 18, .4));
-                        this.text.fill(kity.Color.createHSLA(360, 100, 100, .4));
+                        this.rect.fill(kity.Color.createHSLA(0, 0, 18, .3));
+                        this.text.fill(kity.Color.createHSLA(360, 100, 100, .5));
                     });
                     this.setStyle("cursor", "pointer");
                 },
@@ -7238,7 +7238,7 @@ _p[59] = {
                         this.lastResourceName = resourceName;
                         this.lastBox = box;
                     }
-                    text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, .4));
+                    text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, .5));
                     rect = this.rect;
                     rect.setPosition(0, box.y - paddingY);
                     this.width = Math.round(box.width + paddingX * 2);

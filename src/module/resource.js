@@ -63,7 +63,7 @@ define(function(require, exports, module) {
                 }
 
                 // 资源过多，找不到可用索引颜色，统一返回哈希函数得到的颜色
-                return kity.Color.createHSLA(0, 0, 18, 0.5);
+                return kity.Color.createHSLA(0, 0, 18, 0.3);
                 // return RESOURCE_COLOR_SERIES[colorMapping[resource]] || kity.Color.createHSL(Math.floor(this.getHashCode(resource) / 0x7FFFFFFF * 359), 100, 85);
             },
 
@@ -208,8 +208,8 @@ define(function(require, exports, module) {
                     this.rect.fill('rgba(255, 255, 200, .8)');
                     this.text.fill(kity.Color.createHSLA(360, 100, 100, 1));
                 }).on('mouseout', function() {
-                    this.rect.fill(kity.Color.createHSLA(0, 0, 18, 0.4));
-                    this.text.fill(kity.Color.createHSLA(360, 100, 100, 0.4));
+                    this.rect.fill(kity.Color.createHSLA(0, 0, 18, 0.3));
+                    this.text.fill(kity.Color.createHSLA(360, 100, 100, 0.5));
                 });
                 this.setStyle('cursor', 'pointer');
             },
@@ -240,7 +240,7 @@ define(function(require, exports, module) {
 
                 }
 
-                text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, 0.4));
+                text.setX(paddingX).fill(kity.Color.createHSLA(360, 100, 100, 0.5));
 
                 rect = this.rect;
                 rect.setPosition(0, box.y - paddingY);
