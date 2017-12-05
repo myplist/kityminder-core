@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-11-09
+ * kityminder - v1.4.43 - 2017-12-05
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -694,6 +694,28 @@ _p[11] = {
             createConnect: function(node) {
                 if (node.isRoot()) return;
                 var connection = new kity.Path();
+                connection.on("mouseover", function(event) {
+                    var width = +connection.getAttr("stroke-width");
+                    connection.setAttr("stroke-width", width + 2);
+                    node.getMinder().fire("node-connection-mouseover", {
+                        node: node,
+                        originEvent: event.originEvent
+                    });
+                }).on("mouseout", function(event) {
+                    var width = +connection.getAttr("stroke-width");
+                    width = width - 2 < 1 ? 2 : width - 2;
+                    connection.setAttr("stroke-width", width);
+                    node.getMinder().fire("node-connection-mouseout", {
+                        node: node,
+                        originEvent: event.originEvent
+                    });
+                }).on("click", function(event) {
+                    alert(node.getData("text"));
+                    node.getMinder().fire("node-connection", {
+                        node: node,
+                        originEvent: event.originEvent
+                    });
+                });
                 node._connection = connection;
                 this._connectContainer.addShape(connection);
                 this.updateConnect(node);
@@ -742,7 +764,7 @@ _p[11] = {
                 var group = new kity.Group();
                 var color = kity.Color.createHSLA(27, 95, 55, .9);
                 this._connectContainer.addShape(group);
-                // 创建线索
+                // 创建线条
                 var connection = new kity.Path();
                 group.addShape(connection);
                 connection.setVisible(true);
