@@ -77,7 +77,6 @@ define(function(require, exports, module) {
                     originEvent: event.originEvent
                 });
             }).on('click', function(event) {
-                alert(node.getData('text'));
                 node.getMinder().fire('node-connection', {
                     node: node,
                     originEvent: event.originEvent
