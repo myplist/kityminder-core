@@ -94,7 +94,7 @@ define(function(require, exports, module) {
          * @param {[type]} toId   [description]
          * @param {[type]} desc   [description]
          */
-        addRelationship: function(fromId, toId, desc) {
+        addRelationship: function(fromId, toId, desc, dashed) {
             this._relationships = this._relationships || [];
             var relationship = this._relationships.find(function(r) {
                 return fromId === r.fromId && toId === r.toId;
@@ -103,10 +103,11 @@ define(function(require, exports, module) {
                 var newRelationship = {
                     fromId: fromId,
                     toId: toId,
-                    desc: desc
+                    desc: desc,
+                    dashed: dashed === undefined ? true : dashed
                 };
                 this._relationships.push(newRelationship);
-                newRelationship.connection = this.createRelationship(fromId, toId, desc, true);
+                newRelationship.connection = this.createRelationship(fromId, toId, desc, dashed === undefined ? true : dashed);
             }
         },
         // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
@@ -226,8 +227,8 @@ define(function(require, exports, module) {
                     ];
                 }
                 var calcPoints = function(startNode, endNode, dashed) {
-                    var startEnds = dashed ? getConnectPoints(startNode, dashed).slice(0,1) : getConnectPoints(startNode, dashed).slice(1),
-                        endEnds = getConnectPoints(endNode, dashed);
+                    var startEnds = dashed ? getConnectPoints(startNode, dashed).slice(0,1) : getConnectPoints(startNode, dashed),
+                        endEnds = dashed ? getConnectPoints(endNode, dashed).slice(1) : getConnectPoints(endNode, dashed);
                     var nearStart, nearEnd, minDistance = Number.MAX_VALUE;
                     var i, j, startEnd, endEnd, distance;
                     // 寻找最近的粘附点
@@ -362,7 +363,7 @@ define(function(require, exports, module) {
                         relationship.connection = null;
                     }
                     relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, 
-                                                        relationship.desc, !relationship.fullLined);
+                                                        relationship.desc, relationship.dashed === undefined ? true : relationship.dashed);
                 }
             })
         },
