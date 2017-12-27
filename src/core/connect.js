@@ -231,18 +231,15 @@ define(function(require, exports, module) {
                     var nearStart, nearEnd, minDistance = Number.MAX_VALUE;
                     var i, j, startEnd, endEnd, distance;
                     // 寻找最近的粘附点
-                    // 暴力解法：可优化但不必要，因为点集不会很大
                     for( i = 0; i < startEnds.length; i++) {
-                        // if ( startEnds[i].type !== 'left' && startEnds[i].type !== 'right' ) {
-                            for( j = 0; j < endEnds.length; j++) {
-                                distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * 0.5; //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
-                                if(distance < minDistance) {
-                                    minDistance = distance;
-                                    nearStart = startEnds[i];
-                                    nearEnd = endEnds[j];
-                                }
+                        for( j = 0; j < endEnds.length; j++) {
+                            distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * 0.5;
+                            if(distance < minDistance) {
+                                minDistance = distance;
+                                nearStart = startEnds[i];
+                                nearEnd = endEnds[j];
                             }
-                        // }
+                        }
                     }
 
                     return {
@@ -264,24 +261,25 @@ define(function(require, exports, module) {
                 //         break;
                 // }
                 start = new kity.Point(points.start.x, points.start.y);
-                switch ( points.end.type ) {
-                    case 'top':
-                        end = new kity.Point(points.end.x, points.end.y - 6);
-                        break;
-                    case 'right':
-                        end = new kity.Point(points.end.x + 14, points.end.y);
-                        break;
-                    case 'bottom':
-                        end = new kity.Point(points.end.x, points.end.y + 6);
-                        break;
-                    case 'left':
-                        end = new kity.Point(points.end.x - 2, points.end.y);
-                        break;
-                    default:
-                        end = new kity.Point(points.end.x, points.end.y);
-                        break;
-                }
+                end = new kity.Point(points.end.x, points.end.y);
                 if ( dashed ) {
+                    switch ( points.end.type ) {
+                        case 'top':
+                            end = new kity.Point(points.end.x, points.end.y - 6);
+                            break;
+                        case 'right':
+                            end = new kity.Point(points.end.x + 14, points.end.y);
+                            break;
+                        case 'bottom':
+                            end = new kity.Point(points.end.x, points.end.y + 6);
+                            break;
+                        case 'left':
+                            end = new kity.Point(points.end.x - 2, points.end.y);
+                            break;
+                        default:
+                            end = new kity.Point(points.end.x, points.end.y);
+                            break;
+                    }
                     if ( points.end.type === 'right' || points.end.type === "left" ) {
                         connection.setMarker(hconnectMarker);
                     } else {
@@ -291,7 +289,6 @@ define(function(require, exports, module) {
 
                 vector = kity.Vector.fromPoints(start, end);
                 pathData.push('M', start);
-                // TODO根据fromNode与toNode的关系决定A的参数
                 pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
 
                 connection.setPathData(pathData);
