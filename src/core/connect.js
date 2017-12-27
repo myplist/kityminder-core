@@ -225,8 +225,8 @@ define(function(require, exports, module) {
                     ];
                 }
                 var calcPoints = function(startNode, endNode) {
-                    var startEnds = getConnectPoints(startNode),
-                        endEnds = getConnectPoints(endNode);
+                    var startEnds = getConnectPoints(startNode, dashed),
+                        endEnds = getConnectPoints(endNode, dashed);
                     var nearStart, nearEnd, minDistance = Number.MAX_VALUE;
                     var i, j, startEnd, endEnd, distance;
                     // 寻找最近的粘附点
@@ -252,12 +252,30 @@ define(function(require, exports, module) {
 
                 var points = calcPoints(node, parent);
                 start = new kity.Point(points.start.x, points.start.y);
-                end = new kity.Point(points.end.x, points.end.y);
+                switch ( points.end.type ) {
+                    case 'top':
+                        end = new kity.Point(points.end.x, points.end.y - 6);
+                        break;
+                    case 'right':
+                        end = new kity.Point(points.end.x + 6, points.end.y);
+                        break;
+                    case 'bottom':
+                        end = new kity.Point(points.end.x, points.end.y + 6);
+                        break;
+                    case 'left':
+                        end = new kity.Point(points.end.x - 6, points.end.y);
+                        break;
+                    default:
+                        end = new kity.Point(points.end.x, points.end.y);
+                        break;
+                }
+                debugger;
                 if ( dashed ) {
                     if ( points.end.type === 'right' || points.end.type === "left" ) {
                         connection.setMarker(hconnectMarker);
                     } else {
                         connection.setMarker(vconnectMarker);
+                        connection.setMarker(hconnectMarker);
                     }
                 }
 
