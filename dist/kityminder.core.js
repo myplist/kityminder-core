@@ -827,6 +827,11 @@ _p[11] = {
                         var x1 = box.x, x2 = box.x + box.width, y1 = box.y, y2 = box.y + box.height, xm = box.cx, ym = box.cy;
                         return dashed ? [ {
                             x: xm,
+                            y: ym,
+                            type: "center"
+                        }, // center
+                        {
+                            x: xm,
                             y: y1,
                             type: "top"
                         }, // top
@@ -855,8 +860,8 @@ _p[11] = {
                             type: "left"
                         } ];
                     };
-                    var calcPoints = function(startNode, endNode) {
-                        var startEnds = getConnectPoints(startNode, dashed), endEnds = getConnectPoints(endNode, dashed);
+                    var calcPoints = function(startNode, endNode, dashed) {
+                        var startEnds = dashed ? getConnectPoints(startNode, dashed).slice(0, 1) : getConnectPoints(startNode, dashed).slice(1), endEnds = getConnectPoints(endNode, dashed);
                         var nearStart, nearEnd, minDistance = Number.MAX_VALUE;
                         var i, j, startEnd, endEnd, distance;
                         // 寻找最近的粘附点
@@ -878,7 +883,18 @@ _p[11] = {
                             end: nearEnd
                         };
                     };
-                    var points = calcPoints(node, parent);
+                    var points = calcPoints(node, parent, dashed);
+                    // switch ( points.start.type ) {
+                    //     case 'right':
+                    //         start = new kity.Point(points.start.x - 32 , points.start.y);
+                    //         break;
+                    //     case 'left':
+                    //         start = new kity.Point(points.start.x + 32, points.start.y);
+                    //         break;
+                    //     default:
+                    //         start = new kity.Point(points.start.x, points.start.y);
+                    //         break;
+                    // }
                     start = new kity.Point(points.start.x, points.start.y);
                     switch (points.end.type) {
                       case "top":
@@ -886,7 +902,7 @@ _p[11] = {
                         break;
 
                       case "right":
-                        end = new kity.Point(points.end.x + 16, points.end.y);
+                        end = new kity.Point(points.end.x + 14, points.end.y);
                         break;
 
                       case "bottom":
@@ -894,7 +910,7 @@ _p[11] = {
                         break;
 
                       case "left":
-                        end = new kity.Point(points.end.x - 6, points.end.y);
+                        end = new kity.Point(points.end.x - 2, points.end.y);
                         break;
 
                       default:
