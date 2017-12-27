@@ -886,7 +886,7 @@ _p[11] = {
                         break;
 
                       case "right":
-                        end = new kity.Point(points.end.x + 6, points.end.y);
+                        end = new kity.Point(points.end.x + 16, points.end.y);
                         break;
 
                       case "bottom":
@@ -901,19 +901,17 @@ _p[11] = {
                         end = new kity.Point(points.end.x, points.end.y);
                         break;
                     }
-                    debugger;
                     if (dashed) {
                         if (points.end.type === "right" || points.end.type === "left") {
                             connection.setMarker(hconnectMarker);
                         } else {
                             connection.setMarker(vconnectMarker);
-                            connection.setMarker(hconnectMarker);
                         }
                     }
                     vector = kity.Vector.fromPoints(start, end);
                     pathData.push("M", start);
                     // TODO根据fromNode与toNode的关系决定A的参数
-                    pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 1 : 0, end);
+                    pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
                     connection.setPathData(pathData);
                 };
                 provider(fromNode, toNode, connection);
