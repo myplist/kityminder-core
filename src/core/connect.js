@@ -106,11 +106,11 @@ define(function(require, exports, module) {
                     desc: desc
                 };
                 this._relationships.push(newRelationship);
-                newRelationship.connection = this.createRelationship(fromId, toId, desc);
+                newRelationship.connection = this.createRelationship(fromId, toId, desc, true);
             }
         },
         // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
-        createRelationship: function(fromNodeId, toNodeId, desc) {
+        createRelationship: function(fromNodeId, toNodeId, desc, dashed) {
             var fromNode = this.getNodeById(fromNodeId);
             var toNode = this.getNodeById(toNodeId);
             if ( !fromNode || !toNode ) {
@@ -166,33 +166,38 @@ define(function(require, exports, module) {
                 // this.node.setAttribute('markerUnits', 'userSpaceOnUse');
             });
             connection.stroke(new kity.Pen().pipe(function() {
-                this.setColor(color);
+                if ( dashed ) {
+                    this.setColor(color);
+                    this.setDashArray([10, 5]);
+                } else {
+                    this.setColor(fromNode.getStyle('connect-color') || 'white');
+                }
                 this.setWidth(2);
-                this.setDashArray([10, 5]);
             }));
             fromNode.getMinder().getPaper().addResource(vconnectMarker);
             fromNode.getMinder().getPaper().addResource(hconnectMarker);
             
-
-            group.on('mouseover', function() {
-                connection.stroke(new kity.Pen().pipe(function() {
-                    this.setColor(color);
-                    this.setWidth(4);
-                    this.setDashArray([10, 5]);
-                }));
-            }).on('mouseout', function() {
-                connection.stroke(new kity.Pen().pipe(function() {
-                    this.setColor(color);
-                    this.setWidth(2);
-                    this.setDashArray([10, 5]);
-                }));
-            }).on('click', function(event) {
-                fromNode.getMinder().fire('relationship', {
-                    fromId: fromNodeId,
-                    toId: toNodeId,
-                    originEvent: event.originEvent
+            if ( dashed ) {
+                group.on('mouseover', function() {
+                    connection.stroke(new kity.Pen().pipe(function() {
+                        this.setColor(color);
+                        this.setWidth(4);
+                        this.setDashArray([10, 5]);
+                    }));
+                }).on('mouseout', function() {
+                    connection.stroke(new kity.Pen().pipe(function() {
+                        this.setColor(color);
+                        this.setWidth(2);
+                        this.setDashArray([10, 5]);
+                    }));
+                }).on('click', function(event) {
+                    fromNode.getMinder().fire('relationship', {
+                        fromId: fromNodeId,
+                        toId: toNodeId,
+                        originEvent: event.originEvent
+                    });
                 });
-            });
+            }
 
             // 线条绘制
             var provider = function(node, parent, connection) {
@@ -204,15 +209,18 @@ define(function(require, exports, module) {
                 var pathData = [];
                 var side = box.x > pBox.x ? 'right' : 'left';
                 // TODO 需要一个算法绘制最短路径
-                var getConnectPoints = function( node ) {
+                var getConnectPoints = function( node, dashed ) {
                     var box = node.getLayoutBox();
                     var x1 = box.x, x2 = box.x + box.width,
                         y1 = box.y, y2 = box.y + box.height,
                         xm = box.cx, ym = box.cy;
-                    return [
+                    return dashed ? [
                         { x: xm, y: y1, type: 'top' }, // top
                         { x: x2, y: ym, type: 'right' }, // right
                         { x: xm, y: y2, type: 'bottom' }, // bottom
+                        { x: x1, y: ym, type: 'left' } // left
+                    ] : [
+                        { x: x2, y: ym, type: 'right' }, // right
                         { x: x1, y: ym, type: 'left' } // left
                     ];
                 }
@@ -224,7 +232,7 @@ define(function(require, exports, module) {
                     // 寻找最近的粘附点
                     // 暴力解法：可优化但不必要，因为点集不会很大
                     for( i = 0; i < startEnds.length; i++) {
-                        if ( startEnds[i].type !== 'left' && startEnds[i].type !== 'right' ) {
+                        // if ( startEnds[i].type !== 'left' && startEnds[i].type !== 'right' ) {
                             for( j = 0; j < endEnds.length; j++) {
                                 distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * 0.5; //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
                                 if(distance < minDistance) {
@@ -233,7 +241,7 @@ define(function(require, exports, module) {
                                     nearEnd = endEnds[j];
                                 }
                             }
-                        }
+                        // }
                     }
 
                     return {
@@ -245,15 +253,18 @@ define(function(require, exports, module) {
                 var points = calcPoints(node, parent);
                 start = new kity.Point(points.start.x, points.start.y);
                 end = new kity.Point(points.end.x, points.end.y);
-                if ( points.end.type === 'right' || points.end.type === "left" ) {
-                    connection.setMarker(hconnectMarker);
-                } else {
-                    connection.setMarker(vconnectMarker);
+                if ( dashed ) {
+                    if ( points.end.type === 'right' || points.end.type === "left" ) {
+                        connection.setMarker(hconnectMarker);
+                    } else {
+                        connection.setMarker(vconnectMarker);
+                    }
                 }
 
                 vector = kity.Vector.fromPoints(start, end);
                 pathData.push('M', start);
-                pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
+                // TODO根据fromNode与toNode的关系决定A的参数
+                pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 1 : 0), end);
 
                 connection.setPathData(pathData);
             }
@@ -325,7 +336,8 @@ define(function(require, exports, module) {
                         relationship.connection.remove();
                         relationship.connection = null;
                     }
-                    relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc);
+                    relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, 
+                                                        relationship.desc, !relationship.fullLined);
                 }
             })
         },

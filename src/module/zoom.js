@@ -3,10 +3,8 @@ define(function(require, exports, module) {
     var utils = require('../core/utils');
 
     var Minder = require('../core/minder');
-    var MinderNode = require('../core/node');
     var Command = require('../core/command');
     var Module = require('../core/module');
-    var Renderer = require('../core/render');
 
     Module.register('Zoom', function() {
         var me = this;

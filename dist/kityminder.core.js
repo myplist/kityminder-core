@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-12-05
+ * kityminder - v1.4.43 - 2017-12-27
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2017 Baidu FEX; Licensed MIT
@@ -737,11 +737,11 @@ _p[11] = {
                         desc: desc
                     };
                     this._relationships.push(newRelationship);
-                    newRelationship.connection = this.createRelationship(fromId, toId, desc);
+                    newRelationship.connection = this.createRelationship(fromId, toId, desc, true);
                 }
             },
             // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
-            createRelationship: function(fromNodeId, toNodeId, desc) {
+            createRelationship: function(fromNodeId, toNodeId, desc, dashed) {
                 var fromNode = this.getNodeById(fromNodeId);
                 var toNode = this.getNodeById(toNodeId);
                 if (!fromNode || !toNode) {
@@ -783,31 +783,37 @@ _p[11] = {
                     this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r).setHeight(r);
                 });
                 connection.stroke(new kity.Pen().pipe(function() {
-                    this.setColor(color);
+                    if (dashed) {
+                        this.setColor(color);
+                        this.setDashArray([ 10, 5 ]);
+                    } else {
+                        this.setColor(fromNode.getStyle("connect-color") || "white");
+                    }
                     this.setWidth(2);
-                    this.setDashArray([ 10, 5 ]);
                 }));
                 fromNode.getMinder().getPaper().addResource(vconnectMarker);
                 fromNode.getMinder().getPaper().addResource(hconnectMarker);
-                group.on("mouseover", function() {
-                    connection.stroke(new kity.Pen().pipe(function() {
-                        this.setColor(color);
-                        this.setWidth(4);
-                        this.setDashArray([ 10, 5 ]);
-                    }));
-                }).on("mouseout", function() {
-                    connection.stroke(new kity.Pen().pipe(function() {
-                        this.setColor(color);
-                        this.setWidth(2);
-                        this.setDashArray([ 10, 5 ]);
-                    }));
-                }).on("click", function(event) {
-                    fromNode.getMinder().fire("relationship", {
-                        fromId: fromNodeId,
-                        toId: toNodeId,
-                        originEvent: event.originEvent
+                if (dashed) {
+                    group.on("mouseover", function() {
+                        connection.stroke(new kity.Pen().pipe(function() {
+                            this.setColor(color);
+                            this.setWidth(4);
+                            this.setDashArray([ 10, 5 ]);
+                        }));
+                    }).on("mouseout", function() {
+                        connection.stroke(new kity.Pen().pipe(function() {
+                            this.setColor(color);
+                            this.setWidth(2);
+                            this.setDashArray([ 10, 5 ]);
+                        }));
+                    }).on("click", function(event) {
+                        fromNode.getMinder().fire("relationship", {
+                            fromId: fromNodeId,
+                            toId: toNodeId,
+                            originEvent: event.originEvent
+                        });
                     });
-                });
+                }
                 // 线条绘制
                 var provider = function(node, parent, connection) {
                     var box = node.getLayoutBox(), pBox = parent.getLayoutBox();
@@ -816,10 +822,10 @@ _p[11] = {
                     var pathData = [];
                     var side = box.x > pBox.x ? "right" : "left";
                     // TODO 需要一个算法绘制最短路径
-                    var getConnectPoints = function(node) {
+                    var getConnectPoints = function(node, dashed) {
                         var box = node.getLayoutBox();
                         var x1 = box.x, x2 = box.x + box.width, y1 = box.y, y2 = box.y + box.height, xm = box.cx, ym = box.cy;
-                        return [ {
+                        return dashed ? [ {
                             x: xm,
                             y: y1,
                             type: "top"
@@ -838,6 +844,15 @@ _p[11] = {
                             x: x1,
                             y: ym,
                             type: "left"
+                        } ] : [ {
+                            x: x2,
+                            y: ym,
+                            type: "right"
+                        }, // right
+                        {
+                            x: x1,
+                            y: ym,
+                            type: "left"
                         } ];
                     };
                     var calcPoints = function(startNode, endNode) {
@@ -847,15 +862,14 @@ _p[11] = {
                         // 寻找最近的粘附点
                         // 暴力解法：可优化但不必要，因为点集不会很大
                         for (i = 0; i < startEnds.length; i++) {
-                            if (startEnds[i].type !== "left" && startEnds[i].type !== "right") {
-                                for (j = 0; j < endEnds.length; j++) {
-                                    distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * .5;
-                                    //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
-                                    if (distance < minDistance) {
-                                        minDistance = distance;
-                                        nearStart = startEnds[i];
-                                        nearEnd = endEnds[j];
-                                    }
+                            // if ( startEnds[i].type !== 'left' && startEnds[i].type !== 'right' ) {
+                            for (j = 0; j < endEnds.length; j++) {
+                                distance = Math.abs(startEnds[i].x - endEnds[j].x) + Math.abs(startEnds[i].y - endEnds[j].y) * .5;
+                                //Vector.fromPoints( startEnds[i], endEnds[j] ).length();
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearStart = startEnds[i];
+                                    nearEnd = endEnds[j];
                                 }
                             }
                         }
@@ -867,14 +881,17 @@ _p[11] = {
                     var points = calcPoints(node, parent);
                     start = new kity.Point(points.start.x, points.start.y);
                     end = new kity.Point(points.end.x, points.end.y);
-                    if (points.end.type === "right" || points.end.type === "left") {
-                        connection.setMarker(hconnectMarker);
-                    } else {
-                        connection.setMarker(vconnectMarker);
+                    if (dashed) {
+                        if (points.end.type === "right" || points.end.type === "left") {
+                            connection.setMarker(hconnectMarker);
+                        } else {
+                            connection.setMarker(vconnectMarker);
+                        }
                     }
                     vector = kity.Vector.fromPoints(start, end);
                     pathData.push("M", start);
-                    pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
+                    // TODO根据fromNode与toNode的关系决定A的参数
+                    pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 1 : 0, end);
                     connection.setPathData(pathData);
                 };
                 provider(fromNode, toNode, connection);
@@ -932,7 +949,7 @@ _p[11] = {
                             relationship.connection.remove();
                             relationship.connection = null;
                         }
-                        relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc);
+                        relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc, !relationship.fullLined);
                     }
                 });
             }
@@ -2230,10 +2247,11 @@ _p[20] = {
                 var i, name, type, module, moduleDeals, dealCommands, dealEvents, dealRenderers;
                 var me = this;
                 for (i = 0; i < modulesToLoad.length; i++) {
+                    // 注册的模块名称
                     name = modulesToLoad[i];
                     if (!modulesPool[name]) continue;
-                    // 执行模块初始化，抛出后续处理对象
-                    // moduleDeals是模块抛出的后续处理对象
+                    // 模块定义支持返回对象和函数，其中函数需要执行最终返回对象
+                    // moduleDeals是注册模块的功能map
                     if (typeof modulesPool[name] == "function") {
                         moduleDeals = modulesPool[name].call(me);
                     } else {
@@ -2242,40 +2260,22 @@ _p[20] = {
                     this._modules[name] = moduleDeals;
                     if (!moduleDeals) continue;
                     // 设置该模块的全局默认配制
+                    // 模块的配置是全局配制
                     if (moduleDeals.defaultOptions) {
                         me.setDefaultOptions(moduleDeals.defaultOptions);
                     }
+                    // 模块初始化函数调用
                     if (moduleDeals.init) {
                         moduleDeals.init.call(me, this._options);
                     }
-                    /**
-                 * @Desc: 判断是否支持原生clipboard事件，如果支持，则对pager添加其监听
-                 * @Editor: Naixor
-                 * @Date: 2015.9.20
-                 */
-                    /**
-                 * 由于当前脑图解构问题，clipboard暂时全权交由玩不托管
-                 * @Editor: Naixor
-                 * @Date: 2015.9.24
-                 */
-                    // if (name === 'ClipboardModule' && this.supportClipboardEvent  && !kity.Browser.gecko) {
-                    //     var on = function () {
-                    //         var clipBoardReceiver = this.clipBoardReceiver || document;
-                    //         if (document.addEventListener) {
-                    //             clipBoardReceiver.addEventListener.apply(this, arguments);
-                    //         } else {
-                    //             arguments[0] = 'on' + arguments[0];
-                    //             clipBoardReceiver.attachEvent.apply(this, arguments);
-                    //         }
-                    //     }
-                    //     for (var command in moduleDeals.clipBoardEvents) {
-                    //         on(command, moduleDeals.clipBoardEvents[command]);
-                    //     }
-                    // };
                     // command加入命令池子
                     dealCommands = moduleDeals.commands;
                     for (name in dealCommands) {
                         this._commands[name.toLowerCase()] = new dealCommands[name]();
+                    }
+                    // 添加模块的快捷键
+                    if (moduleDeals.commandShortcutKeys) {
+                        this.addCommandShortcutKeys(moduleDeals.commandShortcutKeys);
                     }
                     // 绑定事件
                     dealEvents = moduleDeals.events;
@@ -2284,7 +2284,7 @@ _p[20] = {
                             me.on(type, dealEvents[type]);
                         }
                     }
-                    // 渲染器
+                    // 渲染器，以left/right/top/bottom等方向为维度注册
                     dealRenderers = moduleDeals.renderers;
                     if (dealRenderers) {
                         for (type in dealRenderers) {
@@ -2296,14 +2296,10 @@ _p[20] = {
                             }
                         }
                     }
-                    //添加模块的快捷键
-                    if (moduleDeals.commandShortcutKeys) {
-                        this.addCommandShortcutKeys(moduleDeals.commandShortcutKeys);
-                    }
                 }
             },
             _garbage: function() {
-                this.clearSelect();
+                this.removeAllSelectedNodes();
                 while (this._root.getChildren().length) {
                     this._root.removeChild(0);
                 }
@@ -8271,10 +8267,8 @@ _p[65] = {
         var kity = _p.r(17);
         var utils = _p.r(33);
         var Minder = _p.r(19);
-        var MinderNode = _p.r(21);
         var Command = _p.r(9);
         var Module = _p.r(20);
-        var Renderer = _p.r(27);
         Module.register("Zoom", function() {
             var me = this;
             var timeline;
