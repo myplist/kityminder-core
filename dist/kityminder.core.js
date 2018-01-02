@@ -1,9 +1,9 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2017-12-27
+ * kityminder - v1.4.43 - 2018-01-02
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
- * Copyright (c) 2017 Baidu FEX; Licensed MIT
+ * Copyright (c) 2018 Baidu FEX; Licensed MIT
  * ====================================================
  */
 
@@ -7504,7 +7504,7 @@ _p[60] = {
                         if (upNode && upNode == lastDownNode) {
                             var upPosition = e.getPosition();
                             var movement = kity.Vector.fromPoints(lastDownPosition, upPosition);
-                            if (movement.length() < 1) this.select(lastDownNode, true);
+                            // if (movement.length() < 1) this.select(lastDownNode, true);
                             lastDownNode = null;
                         }
                         // 清理一下选择状态

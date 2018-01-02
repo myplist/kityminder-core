@@ -158,7 +158,7 @@ define(function(require, exports, module) {
                     if (upNode && upNode == lastDownNode) {
                         var upPosition = e.getPosition();
                         var movement = kity.Vector.fromPoints(lastDownPosition, upPosition);
-                        if (movement.length() < 1) this.select(lastDownNode, true);
+                        // if (movement.length() < 1) this.select(lastDownNode, true);
                         lastDownNode = null;
                     }
 
