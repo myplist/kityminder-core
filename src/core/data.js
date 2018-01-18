@@ -73,15 +73,9 @@ define(function(require, exports, module) {
             json.template = this.getTemplate();
             json.theme = this.getTheme();
             json.version = Minder.version;
-            json.relationships = this._relationships || [];
-
-            // this._relationships && this._relationships.map(function(relationship) {
-            //     return {
-            //         fromId: relationship.fromId,
-            //         toId: relationship.toId,
-            //         desc: relationship.desc
-            //     }
-            // });
+            json.relationships = this._relationships && this._relationships.map(function(relationship) {
+                return Object.assign({},relationship);
+            });
 
             return JSON.parse(JSON.stringify(json));
         },
