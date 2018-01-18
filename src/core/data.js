@@ -73,14 +73,15 @@ define(function(require, exports, module) {
             json.template = this.getTemplate();
             json.theme = this.getTheme();
             json.version = Minder.version;
-            json.relationships = JSON.parse(JSON.stringify(this._relationships || []));
-            // this._relationships && this._relationships.map(function(relationship) {
-            //     return {
-            //         fromId: relationship.fromId,
-            //         toId: relationship.toId,
-            //         desc: relationship.desc
-            //     };
-            // });
+            json.relationships = this._relationships && this._relationships.map(function(relationship) {
+                return {
+                    fromId: relationship.fromId,
+                    toId: relationship.toId,
+                    desc: relationship.desc,
+                    dashed: relationship.dashed,
+                    appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined;
+                };
+            });
 
             return JSON.parse(JSON.stringify(json));
         },
