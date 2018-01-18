@@ -79,7 +79,7 @@ define(function(require, exports, module) {
                     toId: relationship.toId,
                     desc: relationship.desc,
                     dashed: relationship.dashed,
-                    appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined;
+                    appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined
                 };
             });
 
