@@ -977,6 +977,18 @@ _p[11] = {
             updateRelationship: function(node) {
                 var relationships = this._relationships || [];
                 var _self = this;
+                relationships = relationships.filter(function(relationship) {
+                    if (!_self.getNodeById(relationship.fromId) || !_self.getNodeById(relationship.toId)) {
+                        if (relationship.connection) {
+                            relationship.connection.remove();
+                            relationship.connection = null;
+                        }
+                        return false;
+                    } else {
+                        return true;
+                    }
+                });
+                // 刷新
                 relationships.forEach(function(relationship) {
                     var nodeId = node.getData("id");
                     if (nodeId === relationship.fromId || nodeId === relationship.toId) {
