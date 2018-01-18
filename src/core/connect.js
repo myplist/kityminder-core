@@ -108,6 +108,7 @@ define(function(require, exports, module) {
                 };
                 this._relationships.push(newRelationship);
                 newRelationship.connection = this.createRelationship(fromId, toId, desc, dashed === undefined ? true : dashed);
+                return newRelationship;
             }
         },
         // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
