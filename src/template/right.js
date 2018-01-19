@@ -16,6 +16,9 @@ define(function(require, exports, module) {
         },
 
         getConnect: function(node) {
+            if ( node.getData('connect') ) { 
+                return node.getData('connect');
+            }
             if (node.getLevel() == 1) return 'arc';
             return 'bezier';
         }
