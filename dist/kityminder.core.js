@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2018-01-20
+ * kityminder - v1.4.43 - 2018-01-22
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2018 Baidu FEX; Licensed MIT
@@ -924,12 +924,17 @@ _p[11] = {
                             connection.setMarker(vconnectMarker);
                         }
                     }
-                    vector = kity.Vector.fromPoints(start, end);
-                    pathData.push("M", start);
-                    pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
-                    connection.setPathData(pathData);
+                    if (dashed) {
+                        vector = kity.Vector.fromPoints(start, end);
+                        pathData.push("M", start);
+                        pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
+                        connection.setPathData(pathData);
+                    } else {
+                        var provider = _connectProviders["arc"];
+                        provider(fromNode, toNode, connection);
+                    }
                 };
-                provider(fromNode, toNode, connection);
+                provider(toNode, fromNode, connection);
                 if (desc) {
                     var declare = new kity.Text(desc).pipe(function() {
                         this.setSize(10);
@@ -9387,7 +9392,7 @@ _p[71] = {
                     return node.getData("connect");
                 }
                 if (node.getLevel() == 1) return "arc";
-                return "bezier";
+                return "poly";
             }
         });
     }
@@ -9484,7 +9489,7 @@ _p[74] = {
                     return node.getData("connect");
                 }
                 if (node.getLevel() == 1) return "arc";
-                return "bezier";
+                return "poly";
             }
         });
     }

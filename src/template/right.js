@@ -20,7 +20,7 @@ define(function(require, exports, module) {
                 return node.getData('connect');
             }
             if (node.getLevel() == 1) return 'arc';
-            return 'bezier';
+            return 'poly';
         }
     });
 });

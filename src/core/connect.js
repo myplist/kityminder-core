@@ -289,13 +289,17 @@ define(function(require, exports, module) {
                     }
                 }
 
-                vector = kity.Vector.fromPoints(start, end);
-                pathData.push('M', start);
-                pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
-
-                connection.setPathData(pathData);
+                if ( dashed ) {
+                    vector = kity.Vector.fromPoints(start, end);
+                    pathData.push('M', start);
+                    pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
+                    connection.setPathData(pathData);
+                } else {
+                    var provider = _connectProviders['arc'];
+                    provider(fromNode, toNode, connection);
+                }
             }
-            provider(fromNode, toNode, connection);
+            provider(toNode, fromNode, connection);
 
             if ( desc ) {
                 var declare = new kity.Text(desc).pipe(function() {
