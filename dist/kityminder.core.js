@@ -993,7 +993,8 @@ _p[11] = {
             updateRelationship: function(node) {
                 var relationships = this._relationships || [];
                 var _self = this;
-                relationships = relationships.filter(function(relationship) {
+                // 只要一端节点不存在，删除连线
+                this._relationships = relationships.filter(function(relationship) {
                     if (!_self.getNodeById(relationship.fromId) || !_self.getNodeById(relationship.toId)) {
                         if (relationship.connection) {
                             relationship.connection.remove();
@@ -1005,14 +1006,17 @@ _p[11] = {
                     }
                 });
                 // 刷新
-                relationships.forEach(function(relationship) {
+                this._relationships.forEach(function(relationship) {
                     var nodeId = node.getData("id");
                     if (nodeId === relationship.fromId || nodeId === relationship.toId) {
-                        if (relationship.connection) {
+                        // 存在且可见
+                        if (relationship.connection && relationship.connection.getAttr("display") !== "none") {
                             relationship.connection.remove();
                             relationship.connection = null;
                         }
-                        relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc, relationship.dashed === undefined ? true : relationship.dashed, !!relationship.appendData);
+                        if (!(relationship.connection && relationship.connection.getAttr("display") === "none")) {
+                            relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, relationship.desc, relationship.dashed === undefined ? true : relationship.dashed, !!relationship.appendData);
+                        }
                     }
                 });
             }
