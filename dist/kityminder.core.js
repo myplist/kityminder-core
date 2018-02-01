@@ -805,7 +805,7 @@ _p[11] = {
                     });
                 }
                 // 线条绘制
-                var provider = function(node, parent, connection, dashed, noarrow) {
+                var provider = function(node, parent, connection, dashed, noarrow, lineType) {
                     // 是否是虚线
                     if (dashed) {
                         var box = node.getLayoutBox(), pBox = parent.getLayoutBox();
@@ -940,11 +940,11 @@ _p[11] = {
                         pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
                         connection.setPathData(pathData);
                     } else {
-                        var provider = _connectProviders["arc"];
+                        var provider = _connectProviders[lineType || "arc"];
                         provider(fromNode, toNode, connection);
                     }
                 };
-                provider(toNode, fromNode, connection, options.dashed, options.noarrow);
+                provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
                 // 线条描述
                 if (options.desc) {
                     var declare = new kity.Text(options.desc).pipe(function() {
