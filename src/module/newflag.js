@@ -34,10 +34,10 @@ define(function(require, exports, module) {
         var NewFlagIcon = kity.createClass('NewFlagIcon', {
             base: kity.Group,
 
-            constructor: function() {
+            constructor: function(text) {
                 this.callBase();
                 this.path = new kity.Path().setPathData(FLAG_PATH).fill(kity.Color.createHSLA(27, 95, 55, 0.9));
-                this.text = new kity.Text('最新').fill('white').setSize(12).setTranslate(12, 12);
+                this.text = new kity.Text(text || '最新').fill('white').setSize(12).setTranslate(12, 12);
                 this.addShapes([this.path, this.text]);
 
                 this.setStyle('cursor', 'pointer');
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
             base: Renderer,
 
             create: function(node) {
-                return new NewFlagIcon();
+                return new NewFlagIcon(node.getData('markerText'));
             },
 
             shouldRender: function(node) {

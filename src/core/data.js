@@ -74,13 +74,16 @@ define(function(require, exports, module) {
             json.theme = this.getTheme();
             json.version = Minder.version;
             json.relationships = this._relationships && this._relationships.map(function(relationship) {
-                return {
-                    fromId: relationship.fromId,
-                    toId: relationship.toId,
-                    desc: relationship.desc,
-                    dashed: relationship.dashed,
-                    appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined
-                };
+                return Object.assign({}, relationship, { connection: undefined});
+                // return {
+                //     fromId: relationship.fromId,
+                //     toId: relationship.toId,
+                //     desc: relationship.desc,
+                //     dashed: relationship.dashed,
+                //     color: relationship.color,
+                //     noarrow: relationship.noarrow,
+                //     appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined
+                // };
             });
 
             return JSON.parse(JSON.stringify(json));

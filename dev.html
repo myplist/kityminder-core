@@ -35,7 +35,7 @@
                 "resource": ["hello", "hello", "hello"], "note": "哥","markers": ["new","police"], "hyperlink": "hell", "priority":"1"
             },
             "children": [ {
-                "data": { "text": "hello","resource": ["world"], "note": "哥", "memo": "为了世界和平", "markers": ["new", "police"]}, 
+                "data": { "text": "hello","resource": ["world"], "note": "哥", "memo": "为了世界和平", "markers": ["new", "police"], "markerText": "Top"}, 
                 "children": [{
                     "data": {"connect": "poly","text": "world", "memo": "2017-07-06 00:00:00", "resource": ["world"],"markers": ["new", "police"], "priority": "1", "id": "1"}, 
                     "children": []
@@ -55,7 +55,7 @@
         }, 
         "theme": "classic-compact", 
         "template": "right",
-        "relationships": [{"fromId": "1", "toId": "2", "desc": "你好，世界", "appendData":true}]
+        "relationships": [{"fromId": "1", "toId": "2", "desc": "你好，世界", "noarrow": true, "color": "red"}]
     }
     </script>
 </body>

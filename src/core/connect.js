@@ -94,10 +94,11 @@ define(function(require, exports, module) {
          * @param {[type]} toId   [description]
          * @param {[type]} desc   [description]
          */
-        addRelationship: function(fromId, toId, desc, dashed) {
+        // addRelationship: function(fromId, toId, desc, dashed) {
+        addRelationship: function(options) {
             this._relationships = this._relationships || [];
             var relationship = this._relationships.find(function(r) {
-                return fromId === r.fromId && toId === r.toId;
+                return options.fromId === r.fromId && options.toId === r.toId;
             });
             if ( !relationship ) {
                 var newRelationship = {
@@ -106,27 +107,29 @@ define(function(require, exports, module) {
                     desc: desc,
                     dashed: dashed === undefined ? true : dashed
                 };
-                this._relationships.push(newRelationship);
-                newRelationship.connection = this.createRelationship(fromId, toId, desc, dashed === undefined ? true : dashed);
-                return newRelationship;
+                this._relationships.push(options);
+                options.connection = this.createRelationship(options);
+                return options;
             }
         },
         // 1.虚线 2.最短距离 3.连线两端，有一个节点isExpanded为false就不绘
-        createRelationship: function(fromNodeId, toNodeId, desc, dashed, noarrow) {
-            var fromNode = this.getNodeById(fromNodeId);
-            var toNode = this.getNodeById(toNodeId);
-            if ( !fromNode || !toNode ) {
-                // 删除关系
-                var relationships = this._relationships || [];
-                var relationship = relationships.find(function(r) {
-                    return fromNodeId === r.fromId && toNodeId === r.toId;
-                });
-                if ( relationship ) {
-                    var index = relationships.indexOf(relationship);
-                    relationships.splice(index, 1);
-                }
-                return;
-            }
+        // createRelationship: function(fromId, toId, desc, dashed, noarrow) {
+        createRelationship: function(options) {
+            options.dashed = options.dashed === undefined ? true : options.dashed;
+            var fromNode = this.getNodeById(options.fromId);
+            var toNode = this.getNodeById(options.toId);
+            // if ( !fromNode || !toNode ) {
+            //     // 删除关系
+            //     var relationships = this._relationships || [];
+            //     var relationship = relationships.find(function(r) {
+            //         return fromNodeId === r.fromId && toNodeId === r.toId;
+            //     });
+            //     if ( relationship ) {
+            //         var index = relationships.indexOf(relationship);
+            //         relationships.splice(index, 1);
+            //     }
+            //     return;
+            // }
             // 不绘制的情况
             if ( (fromNode.getParent() && fromNode.getParent().isCollapsed()) 
                     || (toNode.getParent() && toNode.getParent().isCollapsed()) 
@@ -143,7 +146,7 @@ define(function(require, exports, module) {
             connection.setVisible(true);
             // 设置线条颜色
             connection.stroke(new kity.Pen().pipe(function() {
-                if ( dashed ) {
+                if ( options.dashed ) {
                     this.setColor(color);
                     this.setDashArray([10, 5]);
                 } else {
@@ -153,7 +156,7 @@ define(function(require, exports, module) {
             }));
 
             // 线条的交互反馈
-            if ( dashed ) {
+            if ( options.dashed ) {
                 group.on('mouseover', function() {
                     connection.stroke(new kity.Pen().pipe(function() {
                         this.setColor(color);
@@ -168,14 +171,14 @@ define(function(require, exports, module) {
                     }));
                 }).on('click', function(event) {
                     fromNode.getMinder().fire('relationship', {
-                        fromId: fromNodeId,
-                        toId: toNodeId,
+                        fromId: options.fromId,
+                        toId: options.toId,
                         originEvent: event.originEvent
                     });
                 });
             }
             // 线条绘制
-            var provider = function(node, parent, connection, dashed) {
+            var provider = function(node, parent, connection, dashed, noarrow) {
                 // 是否是虚线
                 if ( dashed ) {
                     var box = node.getLayoutBox(),
@@ -304,14 +307,14 @@ define(function(require, exports, module) {
                     provider(fromNode, toNode, connection);
                 }
             }
-            provider(toNode, fromNode, connection, dashed);
+            provider(toNode, fromNode, connection, options.dashed, options.noarrow);
             // 线条描述
-            if ( desc ) {
-                var declare = new kity.Text(desc).pipe(function() {
+            if ( options.desc ) {
+                var declare = new kity.Text(options.desc).pipe(function() {
                     var box1 = toNode.getLayoutBox(),
                         box2 = fromNode.getLayoutBox();
-                    this.setSize(11);
-                    this.fill(fromNode.getStyle('color'));
+                    this.setSize(options.fontSize || 11);
+                    this.fill(options.color || fromNode.getStyle('color'));
                     this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
                     this.setTextAnchor('middle');
                     this.setVerticalAlign('bottom');
@@ -391,8 +394,7 @@ define(function(require, exports, module) {
                         relationship.connection = null;
                     }
                     if ( !(relationship.connection && relationship.connection.getAttr('display') === 'none') ) {
-                        relationship.connection = _self.createRelationship(relationship.fromId, relationship.toId, 
-                            relationship.desc, relationship.dashed === undefined ? true : relationship.dashed, !!relationship.appendData);
+                        relationship.connection = _self.createRelationship(relationship);
                     }
                 }
             })
