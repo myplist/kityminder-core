@@ -732,12 +732,12 @@ _p[11] = {
                     return options.fromId === r.fromId && options.toId === r.toId;
                 });
                 if (!relationship) {
-                    var newRelationship = {
-                        fromId: fromId,
-                        toId: toId,
-                        desc: desc,
-                        dashed: dashed === undefined ? true : dashed
-                    };
+                    // var newRelationship = {
+                    //     fromId: fromId,
+                    //     toId: toId,
+                    //     desc: desc,
+                    //     dashed: dashed === undefined ? true : dashed
+                    // };
                     this._relationships.push(options);
                     options.connection = this.createRelationship(options);
                     return options;
