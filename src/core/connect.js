@@ -136,64 +136,6 @@ define(function(require, exports, module) {
                     || !fromNode.attached || !toNode.attached) {
                 return;
             }
-            var connection = options.connection;
-            if ( !connection ) {
-                var group = new kity.Group();
-                var color = kity.Color.createHSLA(27, 95, 55, 0.9);
-                this._connectContainer.addShape(group);
-                // 创建线条
-                var connection = new kity.Path();
-                group.addShape(connection);
-                connection.setVisible(true);
-                // 设置线条颜色
-                connection.stroke(new kity.Pen().pipe(function() {
-                    if ( options.dashed ) {
-                        this.setColor(color);
-                        this.setDashArray([10, 5]);
-                    } else {
-                        this.setColor(fromNode.getStyle('connect-color') || 'white');
-                    }
-                    this.setWidth(2);
-                }));
-
-                // 线条的交互反馈
-                if ( options.dashed ) {
-                    group.on('mouseover', function() {
-                        connection.stroke(new kity.Pen().pipe(function() {
-                            this.setColor(color);
-                            this.setWidth(6);
-                            this.setDashArray([10, 5]);
-                        }));
-                    }).on('mouseout', function() {
-                        connection.stroke(new kity.Pen().pipe(function() {
-                            this.setColor(color);
-                            this.setWidth(2);
-                            this.setDashArray([10, 5]);
-                        }));
-                    }).on('click', function(event) {
-                        fromNode.getMinder().fire('relationship', {
-                            fromId: options.fromId,
-                            toId: options.toId,
-                            originEvent: event.originEvent
-                        });
-                    });
-                }
-
-                // 线条描述
-                if ( options.desc ) {
-                    var declare = new kity.Text(options.desc).pipe(function() {
-                        var box1 = toNode.getLayoutBox(),
-                            box2 = fromNode.getLayoutBox();
-                        this.setSize(options.fontSize || 11);
-                        this.fill(options.color || fromNode.getStyle('color'));
-                        this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
-                        this.setTextAnchor('middle');
-                        this.setVerticalAlign('bottom');
-                    });
-                    declare.setPath(connection);
-                    group.addShape(declare);
-                }
-            }
             // 线条绘制
             var provider = function(node, parent, connection, dashed, noarrow, lineType) {
                 // 是否是虚线
@@ -324,7 +266,83 @@ define(function(require, exports, module) {
                     provider(fromNode, toNode, connection);
                 }
             }
-            provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
+            var connection = options.connection;
+            if ( !connection ) {
+                var group = new kity.Group();
+                var color = kity.Color.createHSLA(27, 95, 55, 0.9);
+                this._connectContainer.addShape(group);
+                // 创建线条
+                var connection = new kity.Path();
+                group.addShape(connection);
+                connection.setVisible(true);
+                // 设置线条颜色
+                connection.stroke(new kity.Pen().pipe(function() {
+                    if ( options.dashed ) {
+                        this.setColor(color);
+                        this.setDashArray([10, 5]);
+                    } else {
+                        this.setColor(fromNode.getStyle('connect-color') || 'white');
+                    }
+                    this.setWidth(2);
+                }));
+
+                // 线条的交互反馈
+                if ( options.dashed ) {
+                    group.on('mouseover', function() {
+                        connection.stroke(new kity.Pen().pipe(function() {
+                            this.setColor(color);
+                            this.setWidth(6);
+                            this.setDashArray([10, 5]);
+                        }));
+                    }).on('mouseout', function() {
+                        connection.stroke(new kity.Pen().pipe(function() {
+                            this.setColor(color);
+                            this.setWidth(2);
+                            this.setDashArray([10, 5]);
+                        }));
+                    }).on('click', function(event) {
+                        fromNode.getMinder().fire('relationship', {
+                            fromId: options.fromId,
+                            toId: options.toId,
+                            originEvent: event.originEvent
+                        });
+                    });
+                }
+                provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
+                // 线条描述
+                if ( options.desc ) {
+                    var declare = new kity.Text(options.desc).pipe(function() {
+                        var box1 = toNode.getLayoutBox(),
+                            box2 = fromNode.getLayoutBox();
+                        this.setSize(options.fontSize || 11);
+                        this.fill(options.color || fromNode.getStyle('color'));
+                        this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
+                        this.setTextAnchor('middle');
+                        this.setVerticalAlign('bottom');
+                    });
+                    declare.setPath(connection);
+                    group.addShape(declare);
+                }
+            } else {
+                provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
+                // 线条描述
+                if ( options.desc ) {
+                    connection.container.getItems().find(function(shape){
+                        if ( shape.getType() === 'Text' ) {
+                            shape.pipe(function() {
+                                var box1 = toNode.getLayoutBox(),
+                                    box2 = fromNode.getLayoutBox();
+                                this.setSize(options.fontSize || 11);
+                                this.fill(options.color || fromNode.getStyle('color'));
+                                this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
+                                this.setTextAnchor('middle');
+                                this.setVerticalAlign('bottom');
+                            });
+                            return true;
+                        }
+                    })
+                }
+            }
 
             return connection;
         },
