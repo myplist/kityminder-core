@@ -389,7 +389,6 @@ define(function(require, exports, module) {
     kity.extendClass(Minder, {
 
         layout: function() {
-
             var duration = this.getOption('layoutAnimationDuration');
 
             this.getRoot().traverse(function(node) {
@@ -401,7 +400,7 @@ define(function(require, exports, module) {
 
                 // layout all children first
                 // 剪枝：收起的节点无需计算
-                if (node.isExpanded() || true) {
+                if (node.isExpanded()) {
                     node.children.forEach(function(child) {
                         layoutNode(child, round);
                     });
@@ -418,7 +417,7 @@ define(function(require, exports, module) {
             layoutNode(this.getRoot(), 1);
 
             // 第二轮布局
-            layoutNode(this.getRoot(), 2);
+            // layoutNode(this.getRoot(), 2);
 
             var minder = this;
             this.applyLayoutResult(this.getRoot(), duration, function() {
@@ -440,7 +439,13 @@ define(function(require, exports, module) {
             this.layout().fire('contentchange')._interactChange();
             return this;
         },
-
+        /**
+         * [applyLayoutResult 布局算法决定节点的变换matrix，layoutOffset微调节点位置]
+         * @param  {[type]}   root     [description]
+         * @param  {[type]}   duration [description]
+         * @param  {Function} callback [description]
+         * @return {[type]}            [description]
+         */
         applyLayoutResult: function(root, duration, callback) {
             root = root || this.getRoot();
             var me = this;
@@ -491,10 +496,10 @@ define(function(require, exports, module) {
                             //可能性能低的时候会丢帧，手动添加一帧
                             setTimeout(function() {
                                 applyMatrix(node, matrix);
-                                me.fire('layoutfinish', {
-                                    node: node,
-                                    matrix: matrix
-                                });
+                                // me.fire('layoutfinish', {
+                                //     node: node,
+                                //     matrix: matrix
+                                // });
                                 consume();
                             }, 150);
                         });
@@ -503,10 +508,10 @@ define(function(require, exports, module) {
                 // 否则直接更新
                 else {
                     applyMatrix(node, matrix);
-                    me.fire('layoutfinish', {
-                        node: node,
-                        matrix: matrix
-                    });
+                    // me.fire('layoutfinish', {
+                    //     node: node,
+                    //     matrix: matrix
+                    // });
                     consume();
                 }
 
@@ -515,6 +520,9 @@ define(function(require, exports, module) {
                 }
             }
             apply(root, root.parent ? root.parent.getGlobalLayoutTransform() : new kity.Matrix());
+            me.fire('layoutfinish', {
+                node: root,
+            });
             return this;
         }
     });

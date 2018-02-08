@@ -399,8 +399,45 @@ define(function(require, exports, module) {
 
         getMinderTitle: function() {
             return this.getRoot().getText();
-        }
+        },
 
+        focusChildTreeNode: function(node) {
+            var _self = this;
+            if ( !node.getData('id') ) {
+                node.setData('id', utils.guid());
+            }
+            this._focusId = node.getData('id');
+            var focusRelationships = cacheRelationships = [];
+            this._relationships.forEach(function(relationship) {
+                if ( node.isAncestorOf(_self.getNodeById(relationship.fromId)) && 
+                    node.isAncestorOf(_self.getNodeById(relationship.toId)) ) {
+                    focusRelationships.push(relationship);
+                } else {
+                    if ( relationship.connection ) {
+                        relationship.connection.remove();
+                        relationship.connection = null;
+                    }
+                    cacheRelationships.push(relationship);
+                }
+            });
+            this._focusCacheJson = this.exportJson(this.getRoot());
+            this._focusCacheJson.relationships = cacheRelationships;
+            var focusJson = this.exportJson(node);
+            focusJson.relationships = focusRelationships;
+            this.importJson(focusJson);
+            this.getRoot().expand();
+            this.refresh();
+        },
+        unFocusChildTreeNode: function() {
+            if ( this._focusId ) {
+                this.importJson(this.exportJson());
+                this._focusId = undefined;
+                this._focusCacheJson = undefined;
+            }
+        },
+        isInFocusMode: function() {
+            return !!this._focusId && !!this._focusCacheJson;
+        }
     });
 
     module.exports = MinderNode;

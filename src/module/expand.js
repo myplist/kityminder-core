@@ -223,7 +223,10 @@ define(function(require, exports, module) {
                     var minder = this;
 
                     node.getRenderContainer().setVisible(visible);
-                    if (!visible) e.stopPropagation();
+                    if (!visible) {
+                        minder.removeRelationship(node);
+                        e.stopPropagation();
+                    }
                 },
                 'normal.keydown': function(e) {
                     if (this.getStatus() == 'textedit') return;

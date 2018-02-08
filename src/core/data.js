@@ -53,7 +53,7 @@ define(function(require, exports, module) {
          *     导出当前脑图数据为 JSON 对象，导出的数据格式请参考 [Data](data) 章节。
          * @grammar exportJson() => {plain}
          */
-        exportJson: function() {
+        exportJson: function(node) {
             /* 导出 node 上整棵树的数据为 JSON */
             function exportNode(node) {
                 var exported = {};
@@ -66,25 +66,44 @@ define(function(require, exports, module) {
                 return exported;
             }
 
-            var json = {
-                root: exportNode(this.getRoot())
-            };
-
-            json.template = this.getTemplate();
-            json.theme = this.getTheme();
-            json.version = Minder.version;
-            json.relationships = this._relationships && this._relationships.map(function(relationship) {
-                return Object.assign({}, relationship, { connection: undefined});
-                // return {
-                //     fromId: relationship.fromId,
-                //     toId: relationship.toId,
-                //     desc: relationship.desc,
-                //     dashed: relationship.dashed,
-                //     color: relationship.color,
-                //     noarrow: relationship.noarrow,
-                //     appendData: relationship.appendData ? JSON.parse(JSON.stringify(relationship.appendData)) : undefined
-                // };
-            });
+            var json;
+            if ( this._focusId && this._focusId === this.getRoot().getData('id') ) {
+                var root = this._focusCacheJson.root;
+                var stack = [];
+                var target = root;
+                while ( target ) {
+                    if ( target.data.id === this._focusId ) {
+                        break;
+                    } else {
+                        if ( target.children.length > 0 ) {
+                            target.children.forEach(function(child) {
+                                stack.push(child);
+                            });
+                        }
+                    }
+                    target = stack.pop();
+                }
+                if ( target ) {
+                    var newVersion = exportNode(this.getRoot());
+                    target.data = newVersion.data;
+                    target.children = newVersion.children;
+                };
+                json = this._focusCacheJson;
+                var relationships = this._relationships && this._relationships.map(function(relationship) {
+                    return Object.assign({}, relationship, { connection: undefined});
+                });
+                json.relationships.concat(relationships);
+            } else {
+                json = {
+                    root: exportNode(node || this.getRoot())
+                };
+                json.template = this.getTemplate();
+                json.theme = this.getTheme();
+                json.version = Minder.version;
+                json.relationships = this._relationships && this._relationships.map(function(relationship) {
+                    return Object.assign({}, relationship, { connection: undefined});
+                });
+            }
 
             return JSON.parse(JSON.stringify(json));
         },

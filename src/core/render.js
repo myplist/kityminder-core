@@ -97,6 +97,7 @@ define(function(require, exports, module) {
                         createRendererForNode(node, rendererClasses);
                     }
                     node._contentBox = new kity.Box();
+                    // beforerender时可设置node是否可见
                     this.fire('beforerender', {
                         node: node
                     });
@@ -142,7 +143,7 @@ define(function(require, exports, module) {
                             // 强制让渲染图形显示
                             renderer.getRenderShape().setVisible(true);
 
-                            // 更新渲染图形
+                            // 更新渲染图形，返回box
                             lastBoxes[j] = renderer.update(renderer.getRenderShape(), node, node._contentBox);
                         } else if (renderer.getRenderShape()) {
                             // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
@@ -203,7 +204,7 @@ define(function(require, exports, module) {
                     }
 
                 });
-
+                // 抛出nodernder事件, 触发比如节点间连线渲染
                 this.fire('noderender', {
                     node: node
                 });

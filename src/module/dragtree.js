@@ -138,9 +138,10 @@ define(function(require, exports, module) {
                     source.setLayoutOffset(null);
                 });
 
-                this._minder.layout(-1);
+                // this._minder.layout(-1);
 
                 this._minder.execCommand('movetoparent', this._dragSources, this._dropSucceedTarget);
+                this._minder.layout(300);
 
             } else if (this._orderSucceedHint) {
 
@@ -163,10 +164,13 @@ define(function(require, exports, module) {
 
                 this._minder.execCommand('arrange', index);
                 this._renderOrderHint(null);
+
+                this._minder.layout(300);
             } else {
                 this._minder.fire('savescene');
+                // this._minder.layout(300);
             }
-            this._minder.layout(300);
+            
             this._leaveDragMode();
             this._minder.fire('contentchange');
             this._minder.fire('dragend');

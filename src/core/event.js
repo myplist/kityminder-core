@@ -158,7 +158,11 @@ define(function(require, exports, module) {
         dispatchKeyEvent: function(e) {
             this._firePharse(e);
         },
-
+        /**
+         * [_firePharse 按事件发生的before/pre/excute/after触发事件]
+         * @param  {[type]} e [description]
+         * @return {[type]}   [description]
+         */
         _firePharse: function(e) {
             var beforeEvent, preEvent, executeEvent;
 

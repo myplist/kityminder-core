@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2018-02-01
+ * kityminder - v1.4.43 - 2018-02-08
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2018 Baidu FEX; Licensed MIT
@@ -765,44 +765,60 @@ _p[11] = {
                 if (fromNode.getParent() && fromNode.getParent().isCollapsed() || toNode.getParent() && toNode.getParent().isCollapsed() || !fromNode.attached || !toNode.attached) {
                     return;
                 }
-                var group = new kity.Group();
-                var color = kity.Color.createHSLA(27, 95, 55, .9);
-                this._connectContainer.addShape(group);
-                // 创建线条
-                var connection = new kity.Path();
-                group.addShape(connection);
-                connection.setVisible(true);
-                // 设置线条颜色
-                connection.stroke(new kity.Pen().pipe(function() {
+                var connection = options.connection;
+                if (!connection) {
+                    var group = new kity.Group();
+                    var color = kity.Color.createHSLA(27, 95, 55, .9);
+                    this._connectContainer.addShape(group);
+                    // 创建线条
+                    var connection = new kity.Path();
+                    group.addShape(connection);
+                    connection.setVisible(true);
+                    // 设置线条颜色
+                    connection.stroke(new kity.Pen().pipe(function() {
+                        if (options.dashed) {
+                            this.setColor(color);
+                            this.setDashArray([ 10, 5 ]);
+                        } else {
+                            this.setColor(fromNode.getStyle("connect-color") || "white");
+                        }
+                        this.setWidth(2);
+                    }));
+                    // 线条的交互反馈
                     if (options.dashed) {
-                        this.setColor(color);
-                        this.setDashArray([ 10, 5 ]);
-                    } else {
-                        this.setColor(fromNode.getStyle("connect-color") || "white");
-                    }
-                    this.setWidth(2);
-                }));
-                // 线条的交互反馈
-                if (options.dashed) {
-                    group.on("mouseover", function() {
-                        connection.stroke(new kity.Pen().pipe(function() {
-                            this.setColor(color);
-                            this.setWidth(6);
-                            this.setDashArray([ 10, 5 ]);
-                        }));
-                    }).on("mouseout", function() {
-                        connection.stroke(new kity.Pen().pipe(function() {
-                            this.setColor(color);
-                            this.setWidth(2);
-                            this.setDashArray([ 10, 5 ]);
-                        }));
-                    }).on("click", function(event) {
-                        fromNode.getMinder().fire("relationship", {
-                            fromId: options.fromId,
-                            toId: options.toId,
-                            originEvent: event.originEvent
+                        group.on("mouseover", function() {
+                            connection.stroke(new kity.Pen().pipe(function() {
+                                this.setColor(color);
+                                this.setWidth(6);
+                                this.setDashArray([ 10, 5 ]);
+                            }));
+                        }).on("mouseout", function() {
+                            connection.stroke(new kity.Pen().pipe(function() {
+                                this.setColor(color);
+                                this.setWidth(2);
+                                this.setDashArray([ 10, 5 ]);
+                            }));
+                        }).on("click", function(event) {
+                            fromNode.getMinder().fire("relationship", {
+                                fromId: options.fromId,
+                                toId: options.toId,
+                                originEvent: event.originEvent
+                            });
                         });
-                    });
+                    }
+                    // 线条描述
+                    if (options.desc) {
+                        var declare = new kity.Text(options.desc).pipe(function() {
+                            var box1 = toNode.getLayoutBox(), box2 = fromNode.getLayoutBox();
+                            this.setSize(options.fontSize || 11);
+                            this.fill(options.color || fromNode.getStyle("color"));
+                            this.setX(Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx, 2) + Math.pow(box1.cy - box2.cy, 2)) / 3));
+                            this.setTextAnchor("middle");
+                            this.setVerticalAlign("bottom");
+                        });
+                        declare.setPath(connection);
+                        group.addShape(declare);
+                    }
                 }
                 // 线条绘制
                 var provider = function(node, parent, connection, dashed, noarrow, lineType) {
@@ -945,20 +961,7 @@ _p[11] = {
                     }
                 };
                 provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
-                // 线条描述
-                if (options.desc) {
-                    var declare = new kity.Text(options.desc).pipe(function() {
-                        var box1 = toNode.getLayoutBox(), box2 = fromNode.getLayoutBox();
-                        this.setSize(options.fontSize || 11);
-                        this.fill(options.color || fromNode.getStyle("color"));
-                        this.setX(Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx, 2) + Math.pow(box1.cy - box2.cy, 2)) / 3));
-                        this.setTextAnchor("middle");
-                        this.setVerticalAlign("bottom");
-                    });
-                    declare.setPath(connection);
-                    group.addShape(declare);
-                }
-                return group;
+                return connection;
             },
             removeConnection: function(connection) {
                 this._connectContainer.removeShape(connection);
@@ -968,6 +971,18 @@ _p[11] = {
                 node.traverse(function(node) {
                     me._connectContainer.removeShape(node._connection);
                     node._connection = null;
+                });
+            },
+            removeRelationship: function(node) {
+                (this._relationships || []).forEach(function(relationship) {
+                    var nodeId = node.getData("id");
+                    if (nodeId === relationship.fromId || nodeId === relationship.toId) {
+                        // // 存在且可见
+                        if (relationship.connection && relationship.connection.getAttr("display") !== "none") {
+                            relationship.connection.remove();
+                            relationship.connection = null;
+                        }
+                    }
                 });
             },
             /**
@@ -1012,14 +1027,7 @@ _p[11] = {
                 this._relationships.forEach(function(relationship) {
                     var nodeId = node.getData("id");
                     if (nodeId === relationship.fromId || nodeId === relationship.toId) {
-                        // 存在且可见
-                        if (relationship.connection && relationship.connection.getAttr("display") !== "none") {
-                            relationship.connection.remove();
-                            relationship.connection = null;
-                        }
-                        if (!(relationship.connection && relationship.connection.getAttr("display") === "none")) {
-                            relationship.connection = _self.createRelationship(relationship);
-                        }
+                        relationship.connection = _self.createRelationship(relationship);
                     }
                 });
             }
@@ -1032,10 +1040,11 @@ _p[11] = {
             events: {
                 nodeattach: function(e) {
                     this.createConnect(e.node);
+                    this.updateRelationship(e.node);
                 },
                 nodedetach: function(e) {
                     this.removeConnect(e.node);
-                    this.updateRelationship(e.node);
+                    this.removeRelationship(e.node);
                 },
                 "layoutapply layoutfinish noderender": function(e) {
                     this.updateConnect(e.node);
@@ -1096,7 +1105,7 @@ _p[12] = {
          *     导出当前脑图数据为 JSON 对象，导出的数据格式请参考 [Data](data) 章节。
          * @grammar exportJson() => {plain}
          */
-            exportJson: function() {
+            exportJson: function(node) {
                 /* 导出 node 上整棵树的数据为 JSON */
                 function exportNode(node) {
                     var exported = {};
@@ -1108,17 +1117,48 @@ _p[12] = {
                     }
                     return exported;
                 }
-                var json = {
-                    root: exportNode(this.getRoot())
-                };
-                json.template = this.getTemplate();
-                json.theme = this.getTheme();
-                json.version = Minder.version;
-                json.relationships = this._relationships && this._relationships.map(function(relationship) {
-                    return Object.assign({}, relationship, {
-                        connection: undefined
+                var json;
+                if (this._focusId && this._focusId === this.getRoot().getData("id")) {
+                    var root = this._focusCacheJson.root;
+                    var stack = [];
+                    var target = root;
+                    while (target) {
+                        if (target.data.id === this._focusId) {
+                            break;
+                        } else {
+                            if (target.children.length > 0) {
+                                target.children.forEach(function(child) {
+                                    stack.push(child);
+                                });
+                            }
+                        }
+                        target = stack.pop();
+                    }
+                    if (target) {
+                        var newVersion = exportNode(this.getRoot());
+                        target.data = newVersion.data;
+                        target.children = newVersion.children;
+                    }
+                    json = this._focusCacheJson;
+                    var relationships = this._relationships && this._relationships.map(function(relationship) {
+                        return Object.assign({}, relationship, {
+                            connection: undefined
+                        });
                     });
-                });
+                    json.relationships.concat(relationships);
+                } else {
+                    json = {
+                        root: exportNode(node || this.getRoot())
+                    };
+                    json.template = this.getTemplate();
+                    json.theme = this.getTheme();
+                    json.version = Minder.version;
+                    json.relationships = this._relationships && this._relationships.map(function(relationship) {
+                        return Object.assign({}, relationship, {
+                            connection: undefined
+                        });
+                    });
+                }
                 return JSON.parse(JSON.stringify(json));
             },
             /**
@@ -1503,6 +1543,11 @@ _p[13] = {
             dispatchKeyEvent: function(e) {
                 this._firePharse(e);
             },
+            /**
+         * [_firePharse 按事件发生的before/pre/excute/after触发事件]
+         * @param  {[type]} e [description]
+         * @return {[type]}   [description]
+         */
             _firePharse: function(e) {
                 var beforeEvent, preEvent, executeEvent;
                 if (e.type == "DOMMouseScroll") {
@@ -2154,7 +2199,7 @@ _p[18] = {
                 function layoutNode(node, round) {
                     // layout all children first
                     // 剪枝：收起的节点无需计算
-                    if (node.isExpanded() || true) {
+                    if (node.isExpanded()) {
                         node.children.forEach(function(child) {
                             layoutNode(child, round);
                         });
@@ -2168,7 +2213,7 @@ _p[18] = {
                 // 第一轮布局
                 layoutNode(this.getRoot(), 1);
                 // 第二轮布局
-                layoutNode(this.getRoot(), 2);
+                // layoutNode(this.getRoot(), 2);
                 var minder = this;
                 this.applyLayoutResult(this.getRoot(), duration, function() {
                     /**
@@ -2187,6 +2232,13 @@ _p[18] = {
                 this.layout().fire("contentchange")._interactChange();
                 return this;
             },
+            /**
+         * [applyLayoutResult 布局算法决定节点的变换matrix，layoutOffset微调节点位置]
+         * @param  {[type]}   root     [description]
+         * @param  {[type]}   duration [description]
+         * @param  {Function} callback [description]
+         * @return {[type]}            [description]
+         */
             applyLayoutResult: function(root, duration, callback) {
                 root = root || this.getRoot();
                 var me = this;
@@ -2225,19 +2277,19 @@ _p[18] = {
                             //可能性能低的时候会丢帧，手动添加一帧
                             setTimeout(function() {
                                 applyMatrix(node, matrix);
-                                me.fire("layoutfinish", {
-                                    node: node,
-                                    matrix: matrix
-                                });
+                                // me.fire('layoutfinish', {
+                                //     node: node,
+                                //     matrix: matrix
+                                // });
                                 consume();
                             }, 150);
                         });
                     } else {
                         applyMatrix(node, matrix);
-                        me.fire("layoutfinish", {
-                            node: node,
-                            matrix: matrix
-                        });
+                        // me.fire('layoutfinish', {
+                        //     node: node,
+                        //     matrix: matrix
+                        // });
                         consume();
                     }
                     for (var i = 0; i < node.children.length; i++) {
@@ -2245,6 +2297,9 @@ _p[18] = {
                     }
                 }
                 apply(root, root.parent ? root.parent.getGlobalLayoutTransform() : new kity.Matrix());
+                me.fire("layoutfinish", {
+                    node: root
+                });
                 return this;
             }
         });
@@ -2733,6 +2788,42 @@ _p[21] = {
             },
             getMinderTitle: function() {
                 return this.getRoot().getText();
+            },
+            focusChildTreeNode: function(node) {
+                var _self = this;
+                if (!node.getData("id")) {
+                    node.setData("id", utils.guid());
+                }
+                this._focusId = node.getData("id");
+                var focusRelationships = cacheRelationships = [];
+                this._relationships.forEach(function(relationship) {
+                    if (node.isAncestorOf(_self.getNodeById(relationship.fromId)) && node.isAncestorOf(_self.getNodeById(relationship.toId))) {
+                        focusRelationships.push(relationship);
+                    } else {
+                        if (relationship.connection) {
+                            relationship.connection.remove();
+                            relationship.connection = null;
+                        }
+                        cacheRelationships.push(relationship);
+                    }
+                });
+                this._focusCacheJson = this.exportJson(this.getRoot());
+                this._focusCacheJson.relationships = cacheRelationships;
+                var focusJson = this.exportJson(node);
+                focusJson.relationships = focusRelationships;
+                this.importJson(focusJson);
+                this.getRoot().expand();
+                this.refresh();
+            },
+            unFocusChildTreeNode: function() {
+                if (this._focusId) {
+                    this.importJson(this.exportJson());
+                    this._focusId = undefined;
+                    this._focusCacheJson = undefined;
+                }
+            },
+            isInFocusMode: function() {
+                return !!this._focusId && !!this._focusCacheJson;
             }
         });
         module.exports = MinderNode;
@@ -3291,6 +3382,7 @@ _p[27] = {
                             createRendererForNode(node, rendererClasses);
                         }
                         node._contentBox = new kity.Box();
+                        // beforerender时可设置node是否可见
                         this.fire("beforerender", {
                             node: node
                         });
@@ -3328,7 +3420,7 @@ _p[27] = {
                                 }
                                 // 强制让渲染图形显示
                                 renderer.getRenderShape().setVisible(true);
-                                // 更新渲染图形
+                                // 更新渲染图形，返回box
                                 lastBoxes[j] = renderer.update(renderer.getRenderShape(), node, node._contentBox);
                             } else if (renderer.getRenderShape()) {
                                 // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
@@ -3380,6 +3472,7 @@ _p[27] = {
                             renderer.getRenderShape().setVisible(false);
                         }
                     });
+                    // 抛出nodernder事件, 触发比如节点间连线渲染
                     this.fire("noderender", {
                         node: node
                     });
@@ -5110,8 +5203,9 @@ _p[45] = {
                     this._dragSources.forEach(function(source) {
                         source.setLayoutOffset(null);
                     });
-                    this._minder.layout(-1);
+                    // this._minder.layout(-1);
                     this._minder.execCommand("movetoparent", this._dragSources, this._dropSucceedTarget);
+                    this._minder.layout(300);
                 } else if (this._orderSucceedHint) {
                     var hint = this._orderSucceedHint;
                     var index = hint.node.getIndex();
@@ -5127,10 +5221,10 @@ _p[45] = {
                     hint.node.setLayoutOffset(null);
                     this._minder.execCommand("arrange", index);
                     this._renderOrderHint(null);
+                    this._minder.layout(300);
                 } else {
                     this._minder.fire("savescene");
                 }
-                this._minder.layout(300);
                 this._leaveDragMode();
                 this._minder.fire("contentchange");
                 this._minder.fire("dragend");
@@ -5540,7 +5634,10 @@ _p[46] = {
                         var visible = !node.parent || node.parent.isExpanded();
                         var minder = this;
                         node.getRenderContainer().setVisible(visible);
-                        if (!visible) e.stopPropagation();
+                        if (!visible) {
+                            minder.removeRelationship(node);
+                            e.stopPropagation();
+                        }
                     },
                     "normal.keydown": function(e) {
                         if (this.getStatus() == "textedit") return;
