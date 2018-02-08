@@ -323,28 +323,23 @@ define(function(require, exports, module) {
                     declare.setPath(connection);
                     group.addShape(declare);
                 }
-            } else {
-                provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
-                // 线条描述
-                if ( options.desc ) {
-                    connection.container.getItems().find(function(shape){
-                        if ( shape.getType() === 'Text' ) {
-                            shape.pipe(function() {
-                                var box1 = toNode.getLayoutBox(),
-                                    box2 = fromNode.getLayoutBox();
-                                this.setSize(options.fontSize || 11);
-                                this.fill(options.color || fromNode.getStyle('color'));
-                                this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
-                                this.setTextAnchor('middle');
-                                this.setVerticalAlign('bottom');
-                            });
-                            return true;
-                        }
-                    })
-                }
-            }
 
-            return connection;
+                return group;
+            } else {
+                provider(toNode, fromNode, connection.getItems()[0], options.dashed, options.noarrow, options.lineType);
+                // 线条描述
+                connection.getItems()[1].pipe(function() {
+                    var box1 = toNode.getLayoutBox(),
+                        box2 = fromNode.getLayoutBox();
+                    this.setSize(options.fontSize || 11);
+                    this.fill(options.color || fromNode.getStyle('color'));
+                    this.setX( Math.floor(Math.sqrt(Math.pow(box1.cx - box2.cx,2) + Math.pow(box1.cy - box2.cy,2)) / 3) );
+                    this.setTextAnchor('middle');
+                    this.setVerticalAlign('bottom');
+                });
+
+                return connection;
+            }
         },
 
         removeConnection: function(connection) {
