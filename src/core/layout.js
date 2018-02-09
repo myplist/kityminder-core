@@ -520,9 +520,7 @@ define(function(require, exports, module) {
                 }
             }
             apply(root, root.parent ? root.parent.getGlobalLayoutTransform() : new kity.Matrix());
-            me.fire('layoutfinish', {
-                node: root,
-            });
+            me.fire('layoutallfinish');
             return this;
         }
     });

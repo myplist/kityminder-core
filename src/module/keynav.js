@@ -39,7 +39,6 @@ define(function(require, exports, module) {
                 findClosestPointsFor(pointIndexes, i);
             }
         }
-
         // 这是金泉的点子，赞！
         // 求两个不相交矩形的最近距离
         function getCoefedDistance(box1, box2) {
@@ -148,8 +147,6 @@ define(function(require, exports, module) {
             }
         }
 
-        // 稀释用
-        var lastFrame;
         return {
             'events': {
                 'layoutallfinish': function() {

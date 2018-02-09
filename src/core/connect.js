@@ -380,7 +380,11 @@ define(function(require, exports, module) {
                 connection.setVisible(false);
                 return;
             }
-            connection.setVisible(true);
+            if ( node.getData('connectVisible') !== undefined ) {
+                connection.setVisible(node.getData('connectVisible'));
+            } else {
+                connection.setVisible(true);
+            }
 
             var provider = node.getConnectProvider();
 
@@ -436,7 +440,7 @@ define(function(require, exports, module) {
                 this.removeConnect(e.node);
                 this.removeRelationship(e.node);
             },
-            'layoutapply layoutfinish noderender': function(e) {
+            'layoutapply': function(e) {
                 this.updateConnect(e.node);
                 this.updateRelationship(e.node);
             },

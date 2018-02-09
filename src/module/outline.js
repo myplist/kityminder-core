@@ -23,7 +23,7 @@ define(function(require, exports, module) {
 
         update: function(outline, node, box) {
 
-            var shape = node.getStyle('shape');
+            var shape =  node.getData('shape') || node.getStyle('shape');
 
             var paddingLeft = node.getStyle('padding-left'),
                 paddingRight = node.getStyle('padding-right'),
@@ -80,11 +80,10 @@ define(function(require, exports, module) {
             shadow.setPosition(box.x + 4, box.y + 5)
                 .fill(node.getStyle('shadow'));
 
-            var shape = node.getStyle('shape');
+            var shape = node.getData('shape') || node.getStyle('shape');
             if(!shape){
                 shadow.setSize(box.width, box.height);
                 shadow.setRadius(node.getStyle('radius'));
-
             }else if(shape=='circle'){
                 var width= Math.max(box.width,box.height);
                 shadow.setSize(width, width);

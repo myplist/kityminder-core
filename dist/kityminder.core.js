@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2018-02-08
+ * kityminder - v1.4.43 - 2018-02-09
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2018 Baidu FEX; Licensed MIT
@@ -226,11 +226,11 @@ _p[4] = {
             var pathData = [];
             var r = Math.round, abs = Math.abs;
             pathData.push("M", po.round());
-            if (abs(vo.x) > abs(vo.y)) {
-                pathData.push("H", r(pi.x));
-            } else {
-                pathData.push("V", pi.y);
-            }
+            // if (abs(vo.x) > abs(vo.y)) {
+            //     pathData.push('H', r(pi.x));
+            // } else {
+            //     pathData.push('V', pi.y);
+            // }
             pathData.push("L", pi);
             connection.setPathData(pathData);
         });
@@ -1009,7 +1009,11 @@ _p[11] = {
                     connection.setVisible(false);
                     return;
                 }
-                connection.setVisible(true);
+                if (node.getData("connectVisible") !== undefined) {
+                    connection.setVisible(node.getData("connectVisible"));
+                } else {
+                    connection.setVisible(true);
+                }
                 var provider = node.getConnectProvider();
                 var strokeColor = node.getStyle("connect-color") || "white", strokeWidth = node.getStyle("connect-width") || 2;
                 connection.stroke(strokeColor, strokeWidth);
@@ -1058,7 +1062,7 @@ _p[11] = {
                     this.removeConnect(e.node);
                     this.removeRelationship(e.node);
                 },
-                "layoutapply layoutfinish noderender": function(e) {
+                layoutapply: function(e) {
                     this.updateConnect(e.node);
                     this.updateRelationship(e.node);
                 }
@@ -2309,9 +2313,7 @@ _p[18] = {
                     }
                 }
                 apply(root, root.parent ? root.parent.getGlobalLayoutTransform() : new kity.Matrix());
-                me.fire("layoutfinish", {
-                    node: root
-                });
+                me.fire("layoutallfinish");
                 return this;
             }
         });
@@ -4653,13 +4655,14 @@ _p[41] = {
                 var pbox = parent.getContentBox();
                 var x, y, box;
                 var _theta = 5;
-                var _r = Math.max(pbox.width, 50);
+                var widthTotal = 0;
                 children.forEach(function(child, index) {
                     child.setLayoutTransform(new kity.Matrix());
                     box = layout.getTreeBox(child);
-                    _r = Math.max(Math.max(box.width, box.height), _r);
+                    widthTotal += Math.max(box.width, box.height);
                 });
-                _r = _r / 1.5 / Math.PI;
+                var _r = Math.max(widthTotal / children.length, 180);
+                _r = _r / 2 / Math.PI;
                 children.forEach(function(child, index) {
                     x = _r * (Math.cos(_theta) + Math.sin(_theta) * _theta);
                     y = _r * (Math.sin(_theta) - Math.cos(_theta) * _theta);
@@ -6298,8 +6301,6 @@ _p[50] = {
                     km.select(nextNode, true);
                 }
             }
-            // 稀释用
-            var lastFrame;
             return {
                 events: {
                     layoutallfinish: function() {
@@ -6736,7 +6737,7 @@ _p[55] = {
                 return outline;
             },
             update: function(outline, node, box) {
-                var shape = node.getStyle("shape");
+                var shape = node.getData("shape") || node.getStyle("shape");
                 var paddingLeft = node.getStyle("padding-left"), paddingRight = node.getStyle("padding-right"), paddingTop = node.getStyle("padding-top"), paddingBottom = node.getStyle("padding-bottom");
                 var outlineBox = {
                     x: box.x - paddingLeft,
@@ -6771,7 +6772,7 @@ _p[55] = {
             },
             update: function(shadow, node, box) {
                 shadow.setPosition(box.x + 4, box.y + 5).fill(node.getStyle("shadow"));
-                var shape = node.getStyle("shape");
+                var shape = node.getData("shape") || node.getStyle("shape");
                 if (!shape) {
                     shadow.setSize(box.width, box.height);
                     shadow.setRadius(node.getStyle("radius"));

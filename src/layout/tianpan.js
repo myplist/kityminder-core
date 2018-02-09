@@ -22,13 +22,15 @@ define(function(require, exports, module) {
 
             var x, y,box;
             var _theta = 5;
-            var _r = Math.max(pbox.width, 50);
+            
+            var widthTotal = 0;
             children.forEach(function (child, index) {
                 child.setLayoutTransform(new kity.Matrix());
                 box = layout.getTreeBox(child);
-                _r = Math.max(Math.max(box.width, box.height), _r);
-            })
-            _r = _r / 1.5 / Math.PI;
+                widthTotal += Math.max(box.width, box.height);
+            });
+            var _r = Math.max(widthTotal / children.length, 180);
+            _r = _r / 2 / Math.PI;
 
             children.forEach(function (child, index) {
                 x = _r * (Math.cos(_theta) + Math.sin(_theta) * _theta);

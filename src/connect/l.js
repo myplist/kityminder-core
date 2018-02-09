@@ -22,11 +22,11 @@ define(function(require, exports, module) {
             abs = Math.abs;
 
         pathData.push('M', po.round());
-        if (abs(vo.x) > abs(vo.y)) {
-            pathData.push('H', r(pi.x));
-        } else {
-            pathData.push('V', pi.y);
-        }
+        // if (abs(vo.x) > abs(vo.y)) {
+        //     pathData.push('H', r(pi.x));
+        // } else {
+        //     pathData.push('V', pi.y);
+        // }
         pathData.push('L', pi);
 
         connection.setPathData(pathData);
