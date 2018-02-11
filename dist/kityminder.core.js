@@ -951,7 +951,7 @@ _p[11] = {
                 } else {
                     provider(toNode, fromNode, connection.getItems()[0], options.dashed, options.noarrow, options.lineType);
                     // 线条描述
-                    connection.getItems()[1].pipe(function() {
+                    connection.getItems()[1] && connection.getItems()[1].pipe(function() {
                         var box1 = toNode.getLayoutBox(), box2 = fromNode.getLayoutBox();
                         this.setSize(options.fontSize || 11);
                         this.fill(options.color || fromNode.getStyle("color"));
