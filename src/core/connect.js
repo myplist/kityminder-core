@@ -188,31 +188,20 @@ define(function(require, exports, module) {
                         }
 
                         var points = calcPoints(node, parent, dashed);
-                        // switch ( points.start.type ) {
-                        //     case 'right':
-                        //         start = new kity.Point(points.start.x - 32 , points.start.y);
-                        //         break;
-                        //     case 'left':
-                        //         start = new kity.Point(points.start.x + 32, points.start.y);
-                        //         break;
-                        //     default:
-                        //         start = new kity.Point(points.start.x, points.start.y);
-                        //         break;
-                        // }
                         start = new kity.Point(points.start.x, points.start.y);
                         end = new kity.Point(points.end.x, points.end.y);
                         switch ( points.end.type ) {
                             case 'top':
-                                end = new kity.Point(points.end.x, points.end.y - 6);
+                                end = new kity.Point(points.end.x, points.end.y - 12);
                                 break;
                             case 'right':
-                                end = new kity.Point(points.end.x + 14, points.end.y);
+                                end = new kity.Point(points.end.x + 12, points.end.y);
                                 break;
                             case 'bottom':
-                                end = new kity.Point(points.end.x, points.end.y + 6);
+                                end = new kity.Point(points.end.x, points.end.y + 12);
                                 break;
                             case 'left':
-                                end = new kity.Point(points.end.x - 2, points.end.y);
+                                end = new kity.Point(points.end.x - 12, points.end.y);
                                 break;
                             default:
                                 end = new kity.Point(points.end.x, points.end.y);
@@ -221,28 +210,20 @@ define(function(require, exports, module) {
                         // 设置线条箭头
                         var color = kity.Color.createHSLA(27, 95, 55, 0.9);
                         var vconnectMarker = new kity.Marker().pipe(function() {
-                            var r = 16;
-                            var path = 'M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z'
+                            var path = 'M 0 0 L 3 6 L 6 0 z';
                             var arrow = new kity.Path()
-                                .setTranslate(8, -3)
-                                // .rotate(180)
                                 .setPathData(path)
                                 .fill(color);
                             this.addShape(arrow);
-                            this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r*2).setHeight(r);
-                            // this.node.setAttribute('markerUnits', 'userSpaceOnUse');
+                            this.setRef(3,1).setWidth(6).setHeight(6);
                         });
                         var hconnectMarker = new kity.Marker().pipe(function() {
-                            var r = 12;
-                            var path = 'M5.11705799,4.47784466,1.27941416,8.3154885,0.00020978,7.03627389,4.79725434,2.23922932,5.11705799,1.91942567,10.23390621,7.03627389,8.9546916,8.3154885Z'
+                            var path = 'M 0 0 L 6 3 L 0 6 z';
                             var arrow = new kity.Path()
-                                .setTranslate(14, -5)
-                                .rotate(90)
                                 .setPathData(path)
                                 .fill(color);
                             this.addShape(arrow);
-                            this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r).setHeight(r);
-                            // this.node.setAttribute('markerUnits', 'userSpaceOnUse');
+                            this.setRef(1,3).setWidth(6).setHeight(6);
                         });
                         node.getMinder().getPaper().addResource(vconnectMarker);
                         node.getMinder().getPaper().addResource(hconnectMarker);
