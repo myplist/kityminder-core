@@ -1142,13 +1142,18 @@ _p[12] = {
                         target.data = newVersion.data;
                         target.children = newVersion.children;
                     }
-                    json = this._focusCacheJson;
+                    json = {
+                        root: this._focusCacheJson.root,
+                        template: this._focusCacheJson.template,
+                        theme: this._focusCacheJson.theme,
+                        version: this._focusCacheJson.version
+                    };
                     var relationships = this._relationships && this._relationships.map(function(relationship) {
                         return Object.assign({}, relationship, {
                             connection: undefined
                         });
                     });
-                    json.relationships = json.relationships.concat(relationships);
+                    json.relationships = this._focusCacheJson.relationships.concat(relationships);
                 } else {
                     json = {
                         root: exportNode(node || this.getRoot())
