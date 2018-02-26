@@ -8122,6 +8122,9 @@ _p[64] = {
                 group.setStyle("cursor", "pointer");
                 return group;
             },
+            shouldRender: function(node) {
+                return node.getData("memo");
+            },
             update: function(textGroup, node, box) {
                 function getDataOrStyle(name) {
                     return node.getData(name) || node.getStyle(name);

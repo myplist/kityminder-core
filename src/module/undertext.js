@@ -28,6 +28,10 @@ define(function(require, exports, module) {
             return group;
         },
 
+        shouldRender: function(node) {
+            return node.getData('memo');
+        },
+
         update: function(textGroup, node, box) {
             function getDataOrStyle(name) {
                 return node.getData(name) || node.getStyle(name);
