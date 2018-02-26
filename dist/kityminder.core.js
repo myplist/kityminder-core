@@ -2827,6 +2827,7 @@ _p[21] = {
                 this.importJson(focusJson);
                 this.getRoot().expand();
                 this.refresh();
+                this.execCommand("Camera");
             },
             unFocusChildTreeNode: function() {
                 if (this._focusId) {
