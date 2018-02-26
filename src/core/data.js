@@ -92,7 +92,7 @@ define(function(require, exports, module) {
                 var relationships = this._relationships && this._relationships.map(function(relationship) {
                     return Object.assign({}, relationship, { connection: undefined});
                 });
-                json.relationships.concat(relationships);
+                json.relationships = json.relationships.concat(relationships);
             } else {
                 json = {
                     root: exportNode(node || this.getRoot())

@@ -1148,7 +1148,7 @@ _p[12] = {
                             connection: undefined
                         });
                     });
-                    json.relationships.concat(relationships);
+                    json.relationships = json.relationships.concat(relationships);
                 } else {
                     json = {
                         root: exportNode(node || this.getRoot())
