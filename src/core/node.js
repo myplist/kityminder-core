@@ -407,7 +407,8 @@ define(function(require, exports, module) {
                 node.setData('id', utils.guid());
             }
             this._focusId = node.getData('id');
-            var focusRelationships = cacheRelationships = [];
+            var focusRelationships = [],
+                cacheRelationships = [];
             this._relationships.forEach(function(relationship) {
                 if ( node.isAncestorOf(_self.getNodeById(relationship.fromId)) && 
                     node.isAncestorOf(_self.getNodeById(relationship.toId)) ) {

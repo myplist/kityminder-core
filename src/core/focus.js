@@ -4,7 +4,17 @@ define(function(require, exports, module) {
 
     Minder.registerInitHook(function() {
         this.on('beforemousedown', function(e) {
-            this.focus();
+            try {
+                this.focus();
+            } catch(e) {
+                var node = this.getSelectedNode();
+                if ( node && node.isRoot() && this.isInFocusMode() ) {
+                    // 子树聚焦还原
+                } else {
+                    throw e;
+                }
+            }
+            
             e.preventDefault();
         });
         this.on('paperrender', function() {

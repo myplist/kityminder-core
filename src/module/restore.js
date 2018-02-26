@@ -34,7 +34,9 @@ define(function(require, exports, module) {
 
             create: function(node) {
                 var icon = new RestoreIcon();
-                icon.on('click', function() {
+                icon.on('click', function(event) {
+                    event.stopPropagation();
+                    node.getMinder().unFocusChildTreeNode();
                     node.getMinder().fire('restore');
                 });
                 return icon;

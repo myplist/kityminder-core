@@ -1648,7 +1648,14 @@ _p[14] = {
         var Minder = _p.r(19);
         Minder.registerInitHook(function() {
             this.on("beforemousedown", function(e) {
-                this.focus();
+                try {
+                    this.focus();
+                } catch (e) {
+                    var node = this.getSelectedNode();
+                    if (node && node.isRoot() && this.isInFocusMode()) {} else {
+                        throw e;
+                    }
+                }
                 e.preventDefault();
             });
             this.on("paperrender", function() {
@@ -2796,7 +2803,7 @@ _p[21] = {
                     node.setData("id", utils.guid());
                 }
                 this._focusId = node.getData("id");
-                var focusRelationships = cacheRelationships = [];
+                var focusRelationships = [], cacheRelationships = [];
                 this._relationships.forEach(function(relationship) {
                     if (node.isAncestorOf(_self.getNodeById(relationship.fromId)) && node.isAncestorOf(_self.getNodeById(relationship.toId))) {
                         focusRelationships.push(relationship);
@@ -7544,7 +7551,9 @@ _p[60] = {
                 base: Renderer,
                 create: function(node) {
                     var icon = new RestoreIcon();
-                    icon.on("click", function() {
+                    icon.on("click", function(event) {
+                        event.stopPropagation();
+                        node.getMinder().unFocusChildTreeNode();
                         node.getMinder().fire("restore");
                     });
                     return icon;
