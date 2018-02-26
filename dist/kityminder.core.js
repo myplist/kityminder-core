@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2018-02-11
+ * kityminder - v1.4.43 - 2018-02-26
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2018 Baidu FEX; Licensed MIT
@@ -4208,32 +4208,33 @@ _p[35] = {
         _p.r(55);
         _p.r(57);
         _p.r(58);
-        _p.r(60);
         _p.r(61);
         _p.r(62);
         _p.r(63);
         _p.r(64);
         _p.r(65);
+        _p.r(66);
         _p.r(56);
         _p.r(52);
-        _p.r(66);
-        _p.r(70);
+        _p.r(60);
         _p.r(67);
-        _p.r(69);
+        _p.r(71);
         _p.r(68);
+        _p.r(70);
+        _p.r(69);
         _p.r(40);
         _p.r(36);
         _p.r(37);
         _p.r(38);
         _p.r(39);
         _p.r(41);
-        _p.r(77);
+        _p.r(78);
+        _p.r(81);
         _p.r(80);
         _p.r(79);
-        _p.r(78);
-        _p.r(80);
-        _p.r(82);
         _p.r(81);
+        _p.r(83);
+        _p.r(82);
         _p.r(0);
         _p.r(1);
         _p.r(2);
@@ -4241,12 +4242,12 @@ _p[35] = {
         _p.r(4);
         _p.r(5);
         _p.r(6);
-        _p.r(71);
-        _p.r(75);
         _p.r(72);
-        _p.r(74);
-        _p.r(73);
         _p.r(76);
+        _p.r(73);
+        _p.r(75);
+        _p.r(74);
+        _p.r(77);
         module.exports = kityminder;
     }
 };
@@ -4839,7 +4840,7 @@ _p[43] = {
         var MinderNode = _p.r(21);
         var Command = _p.r(9);
         var Module = _p.r(20);
-        var TextRenderer = _p.r(62);
+        var TextRenderer = _p.r(63);
         Module.register("basestylemodule", function() {
             var km = this;
             function getNodeDataOrStyle(node, name) {
@@ -5718,7 +5719,7 @@ _p[47] = {
         var MinderNode = _p.r(21);
         var Command = _p.r(9);
         var Module = _p.r(20);
-        var TextRenderer = _p.r(62);
+        var TextRenderer = _p.r(63);
         function getNodeDataOrStyle(node, name) {
             return node.getData(name) || node.getStyle(name);
         }
@@ -7513,8 +7514,70 @@ _p[59] = {
     }
 };
 
-//src/module/select.js
+//src/module/restore.js
+/**
+ * @author: robeenlee.lsp
+ */
 _p[60] = {
+    value: function(require, exports, module) {
+        var kity = _p.r(17);
+        var Command = _p.r(9);
+        var Module = _p.r(20);
+        var Renderer = _p.r(27);
+        Module.register("RestoreIconModule", function() {
+            var FLAG_PATH = "M7.4,4.7v-2C7.3,1.9,6.6,2.4,6.6,2.4l-4.7,4c-1,0.7-0.1,1.2-0.1,1.2l4.6,4c0.9,0.7,1-0.4,1-0.4V9.5C12.1,8,14,13.9,14,13.9c0.2,0.3,0.3,0,0.3,0C16.1,5.1,7.4,4.7,7.4,4.7z";
+            var RestoreIcon = kity.createClass("RestoreIcon", {
+                base: kity.Group,
+                constructor: function() {
+                    this.callBase();
+                    this.width = 20;
+                    this.height = 20;
+                    // 添加police marker
+                    this.addShape(new kity.Path().pipe(function() {
+                        this.setPathData(FLAG_PATH);
+                        this.fill("white");
+                    }));
+                    this.setStyle("cursor", "pointer");
+                }
+            });
+            var RestoreIconRenderer = kity.createClass("RestoreIconRenderer", {
+                base: Renderer,
+                create: function(node) {
+                    var icon = new RestoreIcon();
+                    icon.on("click", function() {
+                        node.getMinder().fire("restore");
+                    });
+                    return icon;
+                },
+                shouldRender: function(node) {
+                    var minder = node.getMinder();
+                    return !!minder && minder.isInFocusMode() && node.isRoot();
+                },
+                update: function(icon, node, box) {
+                    var spaceLeft = node.getStyle("space-left");
+                    var iconBox = icon.getBoundaryBox();
+                    var x = box.left - iconBox.width - spaceLeft;
+                    var y = -icon.height / 2;
+                    icon.setTranslate(x, y);
+                    return new kity.Box({
+                        x: x,
+                        y: y,
+                        width: icon.width,
+                        height: icon.height
+                    });
+                }
+            });
+            return {
+                renderers: {
+                    left: RestoreIconRenderer
+                }
+            };
+        });
+    }
+};
+
+//src/module/select.js
+_p[61] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7659,7 +7722,7 @@ _p[60] = {
 };
 
 //src/module/style.js
-_p[61] = {
+_p[62] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -7764,7 +7827,7 @@ _p[61] = {
 };
 
 //src/module/text.js
-_p[62] = {
+_p[63] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -8018,7 +8081,7 @@ _p[62] = {
 };
 
 //src/module/undertext.js
-_p[63] = {
+_p[64] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -8105,7 +8168,7 @@ _p[63] = {
 };
 
 //src/module/view.js
-_p[64] = {
+_p[65] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -8427,7 +8490,7 @@ _p[64] = {
 };
 
 //src/module/zoom.js
-_p[65] = {
+_p[66] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var utils = _p.r(33);
@@ -8607,7 +8670,7 @@ _p[65] = {
 };
 
 //src/protocol/json.js
-_p[66] = {
+_p[67] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         data.registerProtocol("json", module.exports = {
@@ -8626,7 +8689,7 @@ _p[66] = {
 };
 
 //src/protocol/markdown.js
-_p[67] = {
+_p[68] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var LINE_ENDING_SPLITER = /\r\n|\r|\n/;
@@ -8757,7 +8820,7 @@ _p[67] = {
 };
 
 //src/protocol/png.js
-_p[68] = {
+_p[69] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var data = _p.r(12);
@@ -8978,7 +9041,7 @@ _p[68] = {
 };
 
 //src/protocol/svg.js
-_p[69] = {
+_p[70] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         /**
@@ -9250,7 +9313,7 @@ _p[69] = {
 };
 
 //src/protocol/text.js
-_p[70] = {
+_p[71] = {
     value: function(require, exports, module) {
         var data = _p.r(12);
         var Browser = _p.r(17).Browser;
@@ -9481,7 +9544,7 @@ _p[70] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[71] = {
+_p[72] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("default", {
@@ -9518,7 +9581,7 @@ _p[71] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[72] = {
+_p[73] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("filetree", {
@@ -9546,7 +9609,7 @@ _p[72] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[73] = {
+_p[74] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("fish-bone", {
@@ -9588,7 +9651,7 @@ _p[73] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[74] = {
+_p[75] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("right", {
@@ -9615,7 +9678,7 @@ _p[74] = {
  * @author: techird
  * @copyright: Baidu FEX, 2014
  */
-_p[75] = {
+_p[76] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("structure", {
@@ -9638,7 +9701,7 @@ _p[75] = {
  * @author: along
  * @copyright: bpd729@163.com, 2015
  */
-_p[76] = {
+_p[77] = {
     value: function(require, exports, module) {
         var template = _p.r(31);
         template.register("tianpan", {
@@ -9659,7 +9722,7 @@ _p[76] = {
 };
 
 //src/theme/default.js
-_p[77] = {
+_p[78] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "classic", "classic-compact" ].forEach(function(name) {
@@ -9720,7 +9783,7 @@ _p[77] = {
 };
 
 //src/theme/fish.js
-_p[78] = {
+_p[79] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("fish", {
@@ -9771,7 +9834,7 @@ _p[78] = {
 };
 
 //src/theme/fresh.js
-_p[79] = {
+_p[80] = {
     value: function(require, exports, module) {
         var kity = _p.r(17);
         var theme = _p.r(32);
@@ -9840,7 +9903,7 @@ _p[79] = {
 };
 
 //src/theme/snow.js
-_p[80] = {
+_p[81] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "snow", "snow-compact" ].forEach(function(name) {
@@ -9895,7 +9958,7 @@ _p[80] = {
 };
 
 //src/theme/tianpan.js
-_p[81] = {
+_p[82] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "tianpan", "tianpan-compact" ].forEach(function(name) {
@@ -9957,7 +10020,7 @@ _p[81] = {
 };
 
 //src/theme/wire.js
-_p[82] = {
+_p[83] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("wire", {

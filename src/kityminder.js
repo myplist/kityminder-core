@@ -67,6 +67,7 @@ define(function(require, exports, module) {
     require('./module/zoom');
     require('./module/policeflag');
     require('./module/newflag');
+    require('./module/restore');
 
     require('./protocol/json');
     require('./protocol/text');
