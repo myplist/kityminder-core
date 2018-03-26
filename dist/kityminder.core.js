@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.4.43 - 2018-02-26
+ * kityminder - v1.4.43 - 2018-03-26
  * https://github.com/fex-team/kityminder-core
  * GitHub: https://github.com/fex-team/kityminder-core.git 
  * Copyright (c) 2018 Baidu FEX; Licensed MIT
@@ -927,6 +927,12 @@ _p[11] = {
                             }));
                         }).on("click", function(event) {
                             fromNode.getMinder().fire("relationship", {
+                                fromId: options.fromId,
+                                toId: options.toId,
+                                originEvent: event.originEvent
+                            });
+                        }).on("contextmenu", function(event) {
+                            fromNode.getMinder().fire("relationship.contextmenu", {
                                 fromId: options.fromId,
                                 toId: options.toId,
                                 originEvent: event.originEvent

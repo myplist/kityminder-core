@@ -287,6 +287,12 @@ define(function(require, exports, module) {
                             toId: options.toId,
                             originEvent: event.originEvent
                         });
+                    }).on('contextmenu', function(event) {
+                         fromNode.getMinder().fire('relationship.contextmenu', {
+                            fromId: options.fromId,
+                            toId: options.toId,
+                            originEvent: event.originEvent
+                        });
                     });
                 }
                 provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
