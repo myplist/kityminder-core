@@ -137,7 +137,10 @@ define(function(require, exports, module) {
                 return;
             }
             // 线条绘制
-            var provider = function(node, parent, connection, dashed, noarrow, lineType) {
+            var provider = function(node, parent, connection, options) {
+                var dashed = options.dashed;
+                var noarrow = options.noarrow;
+                var lineType = options.lineType;
                 // 是否是虚线
                 if ( dashed ) {
                     var box = node.getLayoutBox(),
@@ -187,7 +190,7 @@ define(function(require, exports, module) {
                             };
                         }
 
-                        var points = calcPoints(node, parent, dashed);
+                        var points = calcPoints(parent, node, dashed);
                         start = new kity.Point(points.start.x, points.start.y);
                         end = new kity.Point(points.end.x, points.end.y);
                         switch ( points.end.type ) {
@@ -208,7 +211,7 @@ define(function(require, exports, module) {
                                 break;
                         }
                         // 设置线条箭头
-                        var color = kity.Color.createHSLA(27, 95, 55, 0.9);
+                        var color = options.lineColor || kity.Color.createHSLA(27, 95, 55, 0.9);
                         var vconnectMarker = new kity.Marker().pipe(function() {
                             var path = 'M 0 0 L 3 6 L 6 0 z';
                             var arrow = new kity.Path()
@@ -234,8 +237,8 @@ define(function(require, exports, module) {
                             connection.setMarker(vconnectMarker);
                         }
                     } else {
-                        start = new kity.Point(box.cx, box.cy);
-                        end = new kity.Point(pBox.cx, pBox.cy);
+                        end = new kity.Point(box.cx, box.cy);
+                        start = new kity.Point(pBox.cx, pBox.cy);
                     }
                     // 根据start,end绘制线条
                     vector = kity.Vector.fromPoints(start, end);
@@ -244,13 +247,13 @@ define(function(require, exports, module) {
                     connection.setPathData(pathData);
                 } else {
                     var provider = _connectProviders[lineType || 'arc'];
-                    provider(fromNode, toNode, connection);
+                    provider(toNode, fromNode, connection);
                 }
             }
             var connection = options.connection;
             if ( !connection ) {
                 var group = new kity.Group();
-                var color = kity.Color.createHSLA(27, 95, 55, 0.9);
+                var color = options.lineColor || kity.Color.createHSLA(27, 95, 55, 0.9);
                 this._connectContainer.addShape(group);
                 // 创建线条
                 var connection = new kity.Path();
@@ -264,7 +267,7 @@ define(function(require, exports, module) {
                     } else {
                         this.setColor(fromNode.getStyle('connect-color') || 'white');
                     }
-                    this.setWidth(2);
+                    this.setWidth(options.lineWeight || 2);
                 }));
 
                 // 线条的交互反馈
@@ -278,7 +281,7 @@ define(function(require, exports, module) {
                     }).on('mouseout', function() {
                         connection.stroke(new kity.Pen().pipe(function() {
                             this.setColor(color);
-                            this.setWidth(2);
+                            this.setWidth(options.lineWeight || 2);
                             this.setDashArray([10, 5]);
                         }));
                     }).on('click', function(event) {
@@ -295,7 +298,7 @@ define(function(require, exports, module) {
                         });
                     });
                 }
-                provider(toNode, fromNode, connection, options.dashed, options.noarrow, options.lineType);
+                provider(toNode, fromNode, connection, options);
                 // 线条描述
                 if ( options.desc ) {
                     var declare = new kity.Text(options.desc).pipe(function() {
@@ -313,7 +316,7 @@ define(function(require, exports, module) {
 
                 return group;
             } else {
-                provider(toNode, fromNode, connection.getItems()[0], options.dashed, options.noarrow, options.lineType);
+                provider(toNode, fromNode, connection.getItems()[0], options);
                 // 线条描述
                 connection.getItems()[1] && connection.getItems()[1].pipe(function() {
                     var box1 = toNode.getLayoutBox(),
@@ -400,14 +403,20 @@ define(function(require, exports, module) {
                     }
                     return false;
                 } else {
+                    if ( relationship.hide && relationship.connection ) {
+                        relationship.connection.remove();
+                        relationship.connection = null;
+                    }
                     return true;
                 }
             });
             // 刷新
             this._relationships.forEach(function(relationship) {
-                var nodeId = node.getData('id');
-                if ( nodeId === relationship.fromId || nodeId === relationship.toId ) {
-                    relationship.connection = _self.createRelationship(relationship);
+                if ( !relationship.hide ) {
+                    var nodeId = node.getData('id');
+                    if ( nodeId === relationship.fromId || nodeId === relationship.toId ) {
+                        relationship.connection = _self.createRelationship(relationship);
+                    }
                 }
             });
         },
